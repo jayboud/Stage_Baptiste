@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "Stage_Baptiste"
+version = "0.1.0"
+description = ""
+authors = ["Jayboud <jeremie.boudreault@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.24.3"
+qutip = "^4.7.1"
+matplotlib = "^3.7.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
