@@ -12,7 +12,7 @@ from scipy.special import hermite
 from scipy.constants import pi
 
 
-def gkp_stuff(delta, hilbert_dim, peak_range=10):
+def get_gkp(delta, hilbert_dim, peak_range=10):
     """
     Function that calculates essentials for the creation of
     a finite GKP state in regular space, such as his eigenvectors
@@ -60,10 +60,7 @@ class GKP:
     def __init__(self, delta, hilbert_dim):
         self.delta = delta
         self.hilbert_dim = hilbert_dim
-        self.stuff = gkp_stuff(self.delta, self.hilbert_dim)
-        self.coeffs = self.stuff[0]
-        self.eigen_states = self.stuff[1]
-        self.state = self.stuff[2]
+        self.coeffs, self.eigen_states, self.state = get_gkp(self.delta, self.hilbert_dim)
 
 
 one = GKP(1,8)  # Object of a GKP state with delta=1 and a 8 dimensions Hilbert space.
