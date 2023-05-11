@@ -55,7 +55,7 @@ def get_gkp(delta, hilbert_dim, peak_range=10):
         else:
             enveloppe = np.exp(-delta**2 * 2 * n)/(2**n * np.sqrt(float(math.factorial(2*int(n)))))  # first term in multiplication
         herms = hermite(2*n)(0) + 2*sum(np.exp(-js*js*2*pi)*hermite(2*n)(js*2*np.sqrt(pi)))  # second term
-        coeff, eigen_state = enveloppe*herms, qt.basis(hilbert_dim, n)  # calculating coeff and creating eigen_state
+        coeff, eigen_state = enveloppe*herms, qt.fock(hilbert_dim, n)  # calculating coeff and creating eigen_state
         state = coeff*eigen_state  # eigenstate weighted by coefficient
         coeffs.append(coeff)
         eigen_states.append(eigen_state)
