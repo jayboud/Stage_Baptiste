@@ -13,6 +13,7 @@ from matplotlib import cm
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-gkp = GKP(2, 2)  # gkp with delta = 1
+dim = 25
+gkp = GKP(0,dim)  # gkp with delta = 0
 fig, ax = qt.plot_wigner(gkp.state)
-plt.savefig("Wigner_test_for_finite_GKP/figs/Wigner_2,2")
+plt.savefig(f"Wigner_test_for_finite_GKP/figs/Wigner_0,{dim}")
