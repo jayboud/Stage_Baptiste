@@ -73,7 +73,3 @@ class GKP:
         self.delta = delta
         self.hilbert_dim = hilbert_dim
         self.coeffs, self.eigen_states, self.state = get_gkp(self.delta, self.hilbert_dim)
-
-
-# one = GKP(1,8)  Object of a GKP state with delta=1 and a 8 dimensions Hilbert space.
-#                 The only eigenvectors in Fock space taken into account are therefore 0,2,4,6.
