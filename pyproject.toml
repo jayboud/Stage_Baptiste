@@ -13,6 +13,7 @@ drawsvg = {extras = ["all"], version = "^2.1.1"}
 latextools = "^0.5.0"
 bloch-sphere = "^0.5.0"
 ipython = "^8.13.2"
+StrawberryFields = "^0.23.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

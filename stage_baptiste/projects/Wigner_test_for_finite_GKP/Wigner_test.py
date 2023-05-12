@@ -13,8 +13,10 @@ from matplotlib import cm
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-delta = 0.3
-dim = 75
+# delta doit être tel que 1/(2*delta^2) ~ <n>
+
+delta = 0.1
+dim = 120
 gkp = GKP(delta,dim)  # gkp with delta = 0
-fig, ax = qt.plot_wigner(gkp.state,method='laguerre',alpha_max=1)
+fig, ax = qt.plot_wigner(gkp.state,method='laguerre')
 plt.savefig(f"Wigner_test_for_finite_GKP/figs/Wigner_{dim}")

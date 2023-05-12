@@ -23,7 +23,7 @@ def get_gkp(delta, hilbert_dim, peak_range=10):
     delta: int of float
         The index of the GKP state in regular space.
     hilbert_dim: int
-        The number of dimensions in the Hilbert space
+        The number of dimensions of the Hilbert space.
     peak_range: int
         The number of peaks (at x>=0) that we want to
         consider, taken to be 10 by default.
@@ -38,24 +38,21 @@ def get_gkp(delta, hilbert_dim, peak_range=10):
     full_state: ket
         The GKP normalized state.
     """
-    ns = np.arange(0,hilbert_dim,1)  # considering eigenstates
+    ns = np.arange(0,hilbert_dim,2)  # considering even eigenstates only
     js = np.arange(1, peak_range+1, 1)  # considering only the peaks in range of peak_range
     coeffs, eigen_states, states = [],[],[]  # creating the lists to return
-    crit = 60
     # calculating the coefficients c2n
     for n in ns:  # for each eigenstates
-        enveloppe = np.exp(-delta**2 * 2 * n)  # enveloppe
-        herms = hermite(2*n)(0) + 2*sum(
-            np.exp(-js*js*2*pi) * hermite(2*n)(js*2*np.sqrt(pi)))  # second term of multiplication
+        """
+        Note: In the proceeding calculations, 2n is replaced
+              by n since we're already considering even states in ns.
+        """
+        enveloppe = np.exp(-delta**2 * n)  # enveloppe
+        herms = hermite(n)(0) + 2*sum(
+            np.exp(-js*js*2*pi) * hermite(n)(js*2*np.sqrt(pi)))  # second term of multiplication
         numerator = enveloppe*herms
-        if n > 63:
-            bns = np.arange(crit+1,n+1,1)  # taking out big ns over crit value to avoid overflow in factorial
-            coeff = numerator/np.power(2,n,dtype='float')  # dividing by pieces (2**n)
-            coeff /= np.sqrt(float(math.factorial(2*crit)))  # dividing by pieces (first part of factorial)
-            for bn in bns:
-                coeff /= np.sqrt(float(bn))  # dividing by pieces (second part of factorial)
-        else:
-            coeff = numerator/(np.power(2,n,dtype='float')/np.sqrt(float(math.factorial(2*int(n)))))  # first term in multiplication
+        coeff = numerator/np.power(2,n/2,dtype='float')  # dividing by pieces (2**n)
+        coeff /= np.sqrt(float(math.factorial(int(n))))
         eigen_state = qt.fock(hilbert_dim, n)  # creating eigen_state
         state = coeff*eigen_state  # eigenstate weighted by coefficient
         coeffs.append(coeff)
