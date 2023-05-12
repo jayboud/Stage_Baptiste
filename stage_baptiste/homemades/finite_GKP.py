@@ -38,22 +38,19 @@ def get_gkp(delta, hilbert_dim, peak_range=10):
     full_state: ket
         The GKP normalized state.
     """
-    ns = np.arange(0,hilbert_dim,2)  # considering only the pair eigenstates
+    ns = np.arange(0,hilbert_dim,1)  # considering eigenstates
     js = np.arange(1, peak_range+1, 1)  # considering only the peaks in range of peak_range
     coeffs, eigen_states, states = [],[],[]  # creating the lists to return
     crit = 60
     for n in ns:  # for each eigenstates
         if n > 63:
             bns = np.arange(crit+1,n+1,1)  # taking out big ns to avoid overflow in factorial
-            print(bns)
-            print(n)
-            print(2**n)
-            enveloppe = np.exp(-delta**2 * 2*n)/(1.999999**n)
-            enveloppe /= np.sqrt(float(math.factorial(2*int(crit))))
+            enveloppe = np.exp(-delta**2 * 2*n)/np.power(2,n,dtype='float')
+            enveloppe /= np.sqrt(float(math.factorial(2*crit)))
             for bn in bns:
                 enveloppe /= np.sqrt(float(bn))
         else:
-            enveloppe = np.exp(-delta**2 * 2 * n)/(2**n * np.sqrt(float(math.factorial(2*int(n)))))  # first term in multiplication
+            enveloppe = np.exp(-delta**2 * 2 * n)/(np.power(2,n,dtype='float') * np.sqrt(float(math.factorial(2*int(n)))))  # first term in multiplication
         herms = hermite(2*n)(0) + 2*sum(np.exp(-js*js*2*pi)*hermite(2*n)(js*2*np.sqrt(pi)))  # second term
         coeff, eigen_state = enveloppe*herms, qt.fock(hilbert_dim, n)  # calculating coeff and creating eigen_state
         state = coeff*eigen_state  # eigenstate weighted by coefficient
