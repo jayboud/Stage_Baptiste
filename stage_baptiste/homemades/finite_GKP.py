@@ -52,7 +52,7 @@ def get_gkp(delta, hilbert_dim, peak_range=10):
             np.exp(-js*js*2*pi) * hermite(n)(js*2*np.sqrt(pi)))  # second term of multiplication
         numerator = enveloppe*herms
         coeff = numerator/np.power(2,n/2,dtype='float')  # dividing by pieces (2**n)
-        coeff /= np.sqrt(float(math.factorial(int(n))))
+        coeff /= np.sqrt(float(math.factorial(int(n))))  # dividing by pieces (factorial)
         eigen_state = qt.fock(hilbert_dim, n)  # creating eigen_state
         state = coeff*eigen_state  # eigenstate weighted by coefficient
         coeffs.append(coeff)
