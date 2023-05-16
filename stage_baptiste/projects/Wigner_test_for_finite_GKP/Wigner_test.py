@@ -11,14 +11,14 @@ from qutip import *
 from stage_baptiste.homemades.finite_GKP import get_gkp, GKP
 from scipy.constants import pi
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
+from cycler import cycler
 
 # oscillator
 
 # delta doit être tel que 1/(2*delta^2) ~ <n> ??
 
-delta = 0.3
-dim = 50
+delta = 0.25
+dim = 100
 osc = GKP(delta,dim).state  # gkp with delta = 0
 # fig, ax = plot_wigner(osc,method='laguerre')
 # ax.text(-6,6,rf"$\Delta = {delta}$")
@@ -28,26 +28,32 @@ osc = GKP(delta,dim).state  # gkp with delta = 0
 
 # porte Hadamar
 
-lam = 1e-6
-gamma = 0.4
+
 a = destroy(dim)  # produit tensoriel avec qubit
-D = displace(dim,0.4)
-H = lam*a.dag()*a
+X,Y,Z,Sx,Sp = np.sqrt(pi/2),np.sqrt(pi/2)*(1-1j),np.sqrt(pi/2)*1j,np.sqrt(2*pi),np.sqrt(2*pi)*1j
+Ds = [displace(dim,gamma) for gamma in [X,Y,Z,Sx,Sp]]  # X,Z,Y,Sx,Sp
+Ds_labels = ["X","Y","Z","Sx","Sp"]
+H = a.dag()*a
 
-tlist = np.linspace(0,pi/(2*lam),1000)
-
-options = Options()
-options.nsteps = 10000
-res = mesolve(H, osc, tlist, [D],options=options)
+tlist = np.linspace(0,pi/2,1000)
+outs = [mesolve(H, osc, tlist, [], [D]) for D in Ds]
 
 # fonction wigner
-fig, ax = plot_wigner(res.states[-1])
-ax.text(-6,6,rf"$\Delta = {delta}$")
-ax.text(-6,5,rf"$N = {dim}$")
-plt.savefig(f"Wigner_test_for_finite_GKP/figs/Hadamar_{dim}")
+# fig, ax = plot_wigner(res.states[-1])
+# ax.text(-6,6,rf"$\Delta = {delta}$")
+# ax.text(-6,5,rf"$N = {dim}$")
+# plt.savefig(f"Wigner_test_for_finite_GKP/figs/Hadamar_{dim}")
 
 # valeur moyenne operateur deplacement
 fig, ax = plt.subplots()
-ax.plot(tlist,res.expect[0],label=r"$\langle D(\gamma,t) \rangle$")
-ax.text(-6,4,rf"$\gamma = {np.real(gamma)}$")
-plt.savefig("Wigner_test_for_finite_GKP/figs/Davg")
+for out,label in zip(outs,Ds_labels):
+    line_re = ax.plot(tlist,np.real(out.expect[0]),label=rf"${label}$")  # real part
+    line_im = ax.plot(tlist,np.imag(out.expect[0]),ls="--",color=line_re[0].get_color())  # imaginary part
+ax.text(0.02,0.8,rf"$\Delta = {delta}$",ha='left', va='top', transform=ax.transAxes)
+ax.text(0.02,0.7,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
+ax.text(0.02,0.6,r"$H = a^{\dag}a$",ha='left', va='top', transform=ax.transAxes)
+ax.set_xlabel(r"$t$")
+ax.set_ylabel(r"$\langle D \rangle$",rotation=0)
+plt.title("Valeur moyenne du déplacement en fonction du temps")
+plt.legend()
+plt.savefig(f"Wigner_test_for_finite_GKP/figs/Davg_{dim}")
