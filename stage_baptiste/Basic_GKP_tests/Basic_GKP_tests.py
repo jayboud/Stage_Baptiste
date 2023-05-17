@@ -30,7 +30,7 @@ osc = GKP(delta,dim).state  # gkp with delta = 0
 
 
 a = destroy(dim)  # produit tensoriel avec qubit
-X,Y,Z,Sx,Sp = np.sqrt(pi/2),np.sqrt(pi/2)*(1-1j),np.sqrt(pi/2)*1j,np.sqrt(2*pi),np.sqrt(2*pi)*1j
+X,Y,Z,Sx,Sp = np.sqrt(pi/2),np.sqrt(pi/2)*(1+1j),np.sqrt(pi/2)*1j,np.sqrt(2*pi),np.sqrt(2*pi)*1j
 Ds = [displace(dim,gamma) for gamma in [X,Y,Z,Sx,Sp]]  # X,Z,Y,Sx,Sp
 Ds_labels = ["X","Y","Z","Sx","Sp"]
 H = a.dag()*a
