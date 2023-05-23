@@ -2,7 +2,7 @@
 Author : Jeremie Boudreault
 Date: 11/05/2022
 
-Test to see if finite_GKP.py module works.
+Tests to see if finite_GKP.py module works properly.
 """
 
 import numpy as np
@@ -67,9 +67,9 @@ n = a.dag()*a
 H = n*n
 
 tf = pi/8
-# tlist = np.linspace(0,tf,150)  # animation
-tlist = np.linspace(0,tf,1200)  # expectation values
-options = Options(store_states=True)
+# tlist = np.linspace(0,tf,150)  # times for animation
+tlist = np.linspace(0,tf,1200)  # times for expectation values
+options = Options(store_states=True)  # get states even if e_ops are calculated
 outs = [mesolve(H, osc, tlist, [], [D],options=options) for D in Ds]
 
 
