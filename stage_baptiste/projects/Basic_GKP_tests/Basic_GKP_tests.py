@@ -7,7 +7,7 @@ Tests to see if finite_GKP.py module works properly.
 
 import numpy as np
 from qutip import *
-from stage_baptiste.homemades.finite_GKP import get_gkp, GKP
+from stage_baptiste.homemades.finite_GKP import get_d_gkp, GKP
 from scipy.constants import pi
 import matplotlib as mpl
 from matplotlib import pyplot as plt
@@ -35,14 +35,24 @@ Ds = [displace(dim,gamma) for gamma in [X,Y,Z,Sx,Sp]]  # X,Z,Y,Sx,Sp
 Ds_labels = ["X","Y","Z","Sx","Sp"]
 H = a.dag()*a
 
-tlist = np.linspace(0,pi/2,10)
-outs = [mesolve(H, osc, tlist, [], [D]) for D in Ds]
 
-# wigner function for H
-# fig, ax = plot_wigner(res.states[-1])
-# ax.text(-6,6,rf"$\Delta = {delta}$")
-# ax.text(-6,5,rf"$N = {dim}$")
-# plt.savefig(f"Wigner_test_for_finite_GKP/figs/Hadamar_{dim}")
+# wigner function of d_GKP and H on it
+d = 4
+_,_,d_osc = get_d_gkp(delta,dim,d)  # oscillator with d states
+fig, ax = plot_wigner(d_osc)
+ax.text(-6,6,rf"$\Delta = {delta}$")
+ax.text(-6,5,rf"$N = {dim}$")
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/GKP_{dim}_d={d}")
+
+tlist = np.linspace(0,pi/4,10)
+options = Options(store_states=True)  # get states even if e_ops are calculated
+out = mesolve(H, d_osc, tlist, [], [])
+fig, ax = plot_wigner(out.states[-1])
+ax.text(-6,6.5,rf"$\Delta = {delta}$")
+ax.text(-6,5.8,rf"$N = {dim}$")
+ax.text(-6,5.0,r"$U = e^{i\frac{\pi}{4}a^{\dag}a}$")
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/somegate_GKP_{dim}_d={d}")
+
 
 # average of displacements for H
 # fig, ax = plt.subplots()
@@ -57,20 +67,19 @@ outs = [mesolve(H, osc, tlist, [], [D]) for D in Ds]
 # plt.title("Valeur moyenne du déplacement en fonction du temps")
 # plt.legend()
 # plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/H_Davg_{dim}")
-#
 
 
 # sqrtH gate
 
 
-n = a.dag()*a
-H = n*n
-
-tf = pi/8
-# tlist = np.linspace(0,tf,150)  # times for animation
-tlist = np.linspace(0,tf,1200)  # times for expectation values
-options = Options(store_states=True)  # get states even if e_ops are calculated
-outs = [mesolve(H, osc, tlist, [], [D],options=options) for D in Ds]
+# n = a.dag()*a
+# H = n*n
+#
+# tf = pi/8
+# # tlist = np.linspace(0,tf,150)  # times for animation
+# tlist = np.linspace(0,tf,1200)  # times for expectation values
+# options = Options(store_states=True)  # get states even if e_ops are calculated
+# outs = [mesolve(H, osc, tlist, [], [D],options=options) for D in Ds]
 
 
 # sqrtH Wigner function
@@ -122,15 +131,15 @@ outs = [mesolve(H, osc, tlist, [], [D],options=options) for D in Ds]
 
 # average of displacements for sqrtH
 
-fig, ax = plt.subplots()
-for out,label in zip(outs,Ds_labels):
-    line_re = ax.plot(tlist,np.real(out.expect[0]),label=rf"${label}$")  # real part
-    line_im = ax.plot(tlist,np.imag(out.expect[0]),ls="--",color=line_re[0].get_color())  # imaginary part
-ax.text(0.02,0.9,rf"$\Delta = {delta}$",ha='left', va='top', transform=ax.transAxes)
-ax.text(0.02,0.85,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
-ax.text(0.02,0.8,r"$H = n^2$",ha='left', va='top', transform=ax.transAxes)
-ax.set_xlabel(r"$t$")
-ax.set_ylabel(r"$\langle D \rangle$",rotation=0)
-plt.title("Valeur moyenne du déplacement en fonction du temps")
-plt.legend()
-plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/sqrtH_Davg_{dim}")
+# fig, ax = plt.subplots()
+# for out,label in zip(outs,Ds_labels):
+#     line_re = ax.plot(tlist,np.real(out.expect[0]),label=rf"${label}$")  # real part
+#     line_im = ax.plot(tlist,np.imag(out.expect[0]),ls="--",color=line_re[0].get_color())  # imaginary part
+# ax.text(0.02,0.9,rf"$\Delta = {delta}$",ha='left', va='top', transform=ax.transAxes)
+# ax.text(0.02,0.85,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
+# ax.text(0.02,0.8,r"$H = n^2$",ha='left', va='top', transform=ax.transAxes)
+# ax.set_xlabel(r"$t$")
+# ax.set_ylabel(r"$\langle D \rangle$",rotation=0)
+# plt.title("Valeur moyenne du déplacement en fonction du temps")
+# plt.legend()
+# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/sqrtH_Davg_{dim}")
