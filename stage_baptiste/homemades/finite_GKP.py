@@ -38,7 +38,7 @@ def get_d_gkp(delta, hilbert_dim, d, peak_range=10):
     full_state: ket
         The GKP normalized state.
     """
-    ns = np.arange(0,hilbert_dim,d)  # considering d eigenstates only
+    ns = np.arange(0,hilbert_dim,d)  # considering mod d eigenstates only
     js = np.arange(1, peak_range+1, 1)  # considering only the peaks in range of peak_range
     coeffs, eigen_states, states = [],[],[]  # creating the lists to return
     # calculating the coefficients c2n
