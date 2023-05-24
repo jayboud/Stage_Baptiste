@@ -51,6 +51,10 @@ fig, ax = plot_wigner(out.states[-1])
 ax.text(-6,6.5,rf"$\Delta = {delta}$")
 ax.text(-6,5.8,rf"$N = {dim}$")
 ax.text(-6,5.0,r"$U = e^{i\frac{\pi}{4}a^{\dag}a}$")
+# mesuring dimension of grid
+ax.plot([0,np.sqrt(pi/2)],[0,np.sqrt(pi/2)],'-',lw=1.5,color="black")
+ax.text(np.sqrt(pi/2)/2,np.sqrt(pi/2)/2-0.5,r"$\sqrt{\pi}$",color="black",rotation=45)
+
 plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/somegate_GKP_{dim}_d={d}")
 
 
