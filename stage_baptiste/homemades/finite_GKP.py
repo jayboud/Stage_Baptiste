@@ -12,7 +12,7 @@ from scipy.special import hermite
 from scipy.constants import pi
 
 
-def get_d_gkp(delta, hilbert_dim, d, peak_range=10):
+def get_d_gkp(delta, hilbert_dim, m, k, peak_range=10):
     """
     Function that calculates essentials for the creation of
     a finite qdit GKP state in regular space, such as his eigenvectors
@@ -24,6 +24,10 @@ def get_d_gkp(delta, hilbert_dim, d, peak_range=10):
         The index of the GKP state in regular space.
     hilbert_dim: int
         The number of dimensions of the Hilbert space.
+    m : int
+    The gap between considered Fock states.
+    k:
+    The starting number of considered Fock states
     peak_range: int
         The number of peaks (at x>=0) that we want to
         consider, taken to be 10 by default.
@@ -38,7 +42,7 @@ def get_d_gkp(delta, hilbert_dim, d, peak_range=10):
     full_state: ket
         The GKP normalized state.
     """
-    ns = np.arange(0,hilbert_dim,d)  # considering mod d eigenstates only
+    ns = np.arange(k,hilbert_dim,m)  # considering mod d eigenstates only
     js = np.arange(1, peak_range+1, 1)  # considering only the peaks in range of peak_range
     coeffs, eigen_states, states = [],[],[]  # creating the lists to return
     # calculating the coefficients c2n
@@ -66,8 +70,9 @@ class GKP:
     """
     A class for a GKP state.
     """
-    def __init__(self, delta, hilbert_dim,d):
+    def __init__(self, delta, hilbert_dim, m, k):
         self.delta = delta
         self.hilbert_dim = hilbert_dim
-        self.qudit = d
-        self.coeffs, self.eigen_states, self.state = get_d_gkp(self.delta, self.hilbert_dim, self.qudit)
+        self.mod = m
+        self.first = k
+        self.coeffs, self.eigen_states, self.state = get_d_gkp(self.delta, self.hilbert_dim, self.mod, self.first)
