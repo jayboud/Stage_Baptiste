@@ -1,6 +1,6 @@
 """
 Author : Jeremie Boudreault
-Date: 10/05/2022
+Date: 10/05/2023
 
 Creating a class for finite GKP states, according
 to document Analytical_GKP_in_Fock_basis.pdf

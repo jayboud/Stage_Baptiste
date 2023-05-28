@@ -1,11 +1,12 @@
 """
 Author : Jeremie Boudreault
-Date: 11/05/2022
+Date: 11/05/2023
 
 Tests to see if finite_GKP.py module works properly.
 """
 
 import numpy as np
+
 from qutip import *
 from stage_baptiste.homemades.finite_GKP import get_d_gkp, GKP
 from scipy.constants import pi
@@ -36,28 +37,37 @@ Ds_labels = ["X","Y","Z","Sx","Sp"]
 H = a.dag()*a
 
 
-# wigner function of d_GKP and some gate on it
+# wigner function of d_GKP and some gate on it, with marginals
 m = 4
 k = 0
 _,_,d_osc = get_d_gkp(delta,dim,m,k)  # oscillator with d states
+W = WignerDistribution(d_osc, extent=[[-7.5, 7.5], [-7.5, 7.5]])
+Wx = W.marginal(dim=0)
+Wy = W.marginal(dim=1)
+W.visualize()
+Wx.visualize()
+Wy.visualize()
+plt.show()
 fig, ax = plot_wigner(d_osc)
 ax.text(-6,6,rf"$\Delta = {delta}$")
 ax.text(-6,5,rf"$N = {dim}$")
 plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/GKP_{dim}_m={m},k={k}")
-n = a.dag()*a
-H = n**2
-tlist = np.linspace(0,pi/16,10)
-options = Options(store_states=True)  # get states even if e_ops are calculated
-out = mesolve(H, d_osc, tlist, [], [])
-fig, ax = plot_wigner(out.states[-1])
-ax.text(-6,6.5,rf"$\Delta = {delta}$")
-ax.text(-6,5.8,rf"$N = {dim}$")
-ax.text(-6,5.0,r"$U = e^{i\frac{\pi}{16}n^2}$")
-# mesuring dimension of grid
-ax.plot([0,np.sqrt(pi/2)],[0,np.sqrt(pi/2)],'-',lw=1.5,color="black")
-ax.text(np.sqrt(pi/2)/2,np.sqrt(pi/2)/2-0.5,r"$\sqrt{\pi}$",color="black",rotation=45)
 
-plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/somegate_GKP_{dim}_m={m},k={k}")
+
+# n = a.dag()*a
+# H = n**2
+# tlist = np.linspace(0,pi/16,10)
+# options = Options(store_states=True)  # get states even if e_ops are calculated
+# out = mesolve(H, d_osc, tlist, [], [])
+# fig, ax = plot_wigner(out.states[-1])
+# ax.text(-6,6.5,rf"$\Delta = {delta}$")
+# ax.text(-6,5.8,rf"$N = {dim}$")
+# ax.text(-6,5.0,r"$U = e^{i\frac{\pi}{16}n^2}$")
+# # mesuring dimension of grid
+# ax.plot([0,np.sqrt(pi/2)],[0,np.sqrt(pi/2)],'-',lw=1.5,color="black")
+# ax.text(np.sqrt(pi/2)/2,np.sqrt(pi/2)/2-0.5,r"$\sqrt{\pi}$",color="black",rotation=45)
+#
+# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/somegate_GKP_{dim}_m={m},k={k}")
 
 
 # average of displacements for H
@@ -89,8 +99,8 @@ plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basi
 
 
 # sqrtH Wigner function
-
-
+#
+#
 # fig, ax = plot_wigner(outs[0].states[-1])
 # ax.text(-6,6,rf"$\Delta = {delta}$")
 # ax.text(-6,5,rf"$N = {dim}$")
