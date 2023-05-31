@@ -31,7 +31,7 @@ Ds = [displace(dim,gamma) for gamma in [X,Y,Z,Sx,Sp]]  # X,Z,Y,Sx,Sp
 Ds_labels = ["X","Y","Z","Sx","Sp"]
 
 
-# equivalent state to sqrtH at pi/16, with mod4 state
+# exp(i*n*pi/16) with mod2/mod4 states
 
 
 m = 4
