@@ -12,7 +12,7 @@ from scipy.special import hermite
 from scipy.constants import pi
 
 
-def get_d_gkp(delta, hilbert_dim, m, k, peak_range=10):
+def get_d_gkp(d, number, delta, hilbert_dim, peak_range=10):
     """
     Function that calculates essentials for the creation of
     a finite qdit GKP state in regular space, such as his eigenvectors
@@ -20,14 +20,14 @@ def get_d_gkp(delta, hilbert_dim, m, k, peak_range=10):
     and the full normalized state.
 
     Args:
+    d: int
+        The dimension of codespace
     delta: int of float
         The index of the GKP state in regular space.
     hilbert_dim: int
         The number of dimensions of the Hilbert space (Fock space).
-    m : int
-    The gap between considered Fock states.
-    k:
-    The starting number of considered Fock states
+    number: int
+        The number of the logical state.
     peak_range: int
         The number of peaks (at x>=0) that we want to
         consider, taken to be 10 by default.
@@ -42,8 +42,9 @@ def get_d_gkp(delta, hilbert_dim, m, k, peak_range=10):
     full_state: ket
         The GKP normalized state.
     """
-    ns = np.arange(k,hilbert_dim,m)  # considering mod d eigenstates only
+    ns = np.arange(0,hilbert_dim,2)  # considering pair Fock states only
     js = np.arange(1, peak_range+1, 1)  # considering only the peaks in range of peak_range
+    js = js*(1 + number/d)
     coeffs, eigen_states, states = [],[],[]  # creating the lists to return
     # calculating the coefficients c2n
     for n in ns:  # for each eigenstates
@@ -51,9 +52,13 @@ def get_d_gkp(delta, hilbert_dim, m, k, peak_range=10):
         Note: In the proceeding calculations, 2n is replaced
               by n since we're already considering even states in ns.
         """
+        if d == 2:
+            xs = js*2*np.sqrt(pi)
+        if d == 8:
+            xs = js*4*np.sqrt(pi)
+        herms = hermite(n)(0) + 2 * sum(
+            np.exp(-xs*xs/2) * hermite(n)(xs))  # second term of multiplication
         enveloppe = np.exp(-delta**2 * n)  # enveloppe
-        herms = hermite(n)(0) + 2*sum(
-            np.exp(-js*js*2*pi) * hermite(n)(js*2*np.sqrt(pi)))  # second term of multiplication
         numerator = enveloppe*herms
         coeff = numerator/np.power(2,n/2,dtype='float')  # dividing by pieces (2**n)
         coeff /= np.sqrt(float(math.factorial(int(n))))  # dividing by pieces (factorial)
@@ -70,22 +75,21 @@ class GKP:
     """
     A class for a GKP state.
     """
-    def __init__(self, delta, hilbert_dim, m, k):
+    def __init__(self, d, number, delta, hilbert_dim):
         """
 
         Args:
+            d: int
+                The dimension of the codespace
+            number: int (< d)
+                The number of the logical state.
             delta: float
                 The enveloppe of the finite state.
             hilbert_dim: int
                 The number of dimensions of the Hilbert space (Fock space).
-            m: int
-                The modulo of the Fock states.
-            k: int
-                The starting point of the sum of Fock states, generally
-                smaller than m.
         """
+        self.d = d
+        self.number = number
         self.delta = delta
         self.hilbert_dim = hilbert_dim
-        self.mod = m
-        self.first = k
-        self.coeffs, self.eigen_states, self.state = get_d_gkp(self.delta, self.hilbert_dim, self.mod, self.first)
+        self.coeffs, self.eigen_states, self.state = get_d_gkp(self.d, self.number, self.delta, self.hilbert_dim)
