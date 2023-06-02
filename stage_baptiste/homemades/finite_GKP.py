@@ -19,11 +19,11 @@ def get_d_gkp(delta, hilbert_dim, m, k, peak_range=10):
     in the Fock basis with their respective coefficients,
     and the full normalized state.
 
-    Parameters:
+    Args:
     delta: int of float
         The index of the GKP state in regular space.
     hilbert_dim: int
-        The number of dimensions of the Hilbert space.
+        The number of dimensions of the Hilbert space (Fock space).
     m : int
     The gap between considered Fock states.
     k:
@@ -71,6 +71,19 @@ class GKP:
     A class for a GKP state.
     """
     def __init__(self, delta, hilbert_dim, m, k):
+        """
+
+        Args:
+            delta: float
+                The enveloppe of the finite state.
+            hilbert_dim: int
+                The number of dimensions of the Hilbert space (Fock space).
+            m: int
+                The modulo of the Fock states.
+            k: int
+                The starting point of the sum of Fock states, generally
+                smaller than m.
+        """
         self.delta = delta
         self.hilbert_dim = hilbert_dim
         self.mod = m

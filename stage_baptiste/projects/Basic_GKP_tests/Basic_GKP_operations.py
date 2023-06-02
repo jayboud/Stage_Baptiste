@@ -2,7 +2,7 @@
 Author : Jeremie Boudreault
 Date: 11/05/2023
 
-Tests to see if finite_GKP.py module works properly.
+Making various basic calculation using finite_GKP.py .
 """
 
 import numpy as np
@@ -51,7 +51,7 @@ plt.show()
 fig, ax = plot_wigner(d_osc)
 ax.text(-6,6,rf"$\Delta = {delta}$")
 ax.text(-6,5,rf"$N = {dim}$")
-plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/GKP_{dim}_m={m},k={k}")
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/GKP_{dim}_m={m},k={k}")
 
 
 # n = a.dag()*a
@@ -67,7 +67,7 @@ plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basi
 # ax.plot([0,np.sqrt(pi/2)],[0,np.sqrt(pi/2)],'-',lw=1.5,color="black")
 # ax.text(np.sqrt(pi/2)/2,np.sqrt(pi/2)/2-0.5,r"$\sqrt{\pi}$",color="black",rotation=45)
 #
-# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/somegate_GKP_{dim}_m={m},k={k}")
+# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/somegate_GKP_{dim}_m={m},k={k}")
 
 
 # average of displacements for H
@@ -82,7 +82,7 @@ plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basi
 # ax.set_ylabel(r"$\langle D \rangle$",rotation=0)
 # plt.title("Valeur moyenne du déplacement en fonction du temps")
 # plt.legend()
-# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/H_Davg_{dim}")
+# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/H_Davg_{dim}")
 
 
 # sqrtH gate
@@ -104,7 +104,7 @@ plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basi
 # fig, ax = plot_wigner(outs[0].states[-1])
 # ax.text(-6,6,rf"$\Delta = {delta}$")
 # ax.text(-6,5,rf"$N = {dim}$")
-# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/sqrtHadamar_{dim}")
+# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/sqrtHadamar_{dim}")
 
 
 # sqrtH Wigner function animation
@@ -141,7 +141,7 @@ plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basi
 #
 # anim = FuncAnimation(
 #     fig, animate, interval=100, frames=frames)
-# anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/"
+# anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
 #           "Wigner_animation_sqrtH.gif")
 
 
@@ -158,4 +158,4 @@ plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basi
 # ax.set_ylabel(r"$\langle D \rangle$",rotation=0)
 # plt.title("Valeur moyenne du déplacement en fonction du temps")
 # plt.legend()
-# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_tests/figs/sqrtH_Davg_{dim}")
+# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/sqrtH_Davg_{dim}")
