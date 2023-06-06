@@ -18,9 +18,9 @@ from matplotlib.transforms import Affine2D
 import mpl_toolkits.axisartist.floating_axes as floating_axes
 
 
-delta = 0.25
+delta = 0.15
 dim = 100
-osc = GKP(2,1,delta,100).state
+osc = GKP(8,4,delta,100).state
 
 a = destroy(dim)
 
@@ -34,8 +34,8 @@ n = a.dag()*a
 H = n**2
 tlist = np.linspace(0,pi/16,10)
 options = Options(store_states=True)  # get states even if e_ops are calculated
-out = mesolve(H, osc, tlist, [], [])
-psi = out.states[0]
+# out = mesolve(H, osc, tlist, [], [])
+psi = osc
 if psi.type == 'ket' or psi.type == 'bra':
     rho = ket2dm(psi)
 else:

@@ -44,7 +44,7 @@ def get_d_gkp(d, number, delta, hilbert_dim, peak_range=10):
     """
     ns = np.arange(0,hilbert_dim,2)  # considering pair Fock states only
     js = np.arange(1, peak_range+1, 1)  # considering only the peaks in range of peak_range
-    js = js + js*number/d
+    js = js + number/d
     coeffs, eigen_states, states = [],[],[]  # creating the lists to return
     # calculating the coefficients c2n
     for n in ns:  # for each eigenstates
