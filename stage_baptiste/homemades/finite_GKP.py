@@ -44,7 +44,7 @@ def get_d_gkp(d, number, delta, hilbert_dim, peak_range=10):
     """
     ns = np.arange(0,hilbert_dim,2)  # considering pair Fock states only
     js = np.arange(1, peak_range+1, 1)  # considering only the peaks in range of peak_range
-    js = js*(1 + number/d)
+    js = js + js*number/d
     coeffs, eigen_states, states = [],[],[]  # creating the lists to return
     # calculating the coefficients c2n
     for n in ns:  # for each eigenstates
@@ -56,12 +56,13 @@ def get_d_gkp(d, number, delta, hilbert_dim, peak_range=10):
             xs = js*2*np.sqrt(pi)
         if d == 8:
             xs = js*4*np.sqrt(pi)
-        herms = hermite(n)(0) + 2 * sum(
+        herms = hermite(n)(0) + 2*sum(
             np.exp(-xs*xs/2) * hermite(n)(xs))  # second term of multiplication
         enveloppe = np.exp(-delta**2 * n)  # enveloppe
         numerator = enveloppe*herms
         coeff = numerator/np.power(2,n/2,dtype='float')  # dividing by pieces (2**n)
         coeff /= np.sqrt(float(math.factorial(int(n))))  # dividing by pieces (factorial)
+        coeff /= pi**(1/4)  # dividing by pieces (sqrt(pi))
         eigen_state = qt.fock(hilbert_dim, n)  # creating eigen_state
         state = coeff*eigen_state  # eigenstate weighted by coefficient
         coeffs.append(coeff)
