@@ -17,10 +17,11 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.transforms import Affine2D
 import mpl_toolkits.axisartist.floating_axes as floating_axes
 
-
-delta = 0.15
+d = 8
+j = 0
+delta = 0.3
 dim = 100
-osc = GKP(8,4,delta,100).state
+osc = 1/np.sqrt(2)*(GKP(d,2,delta,dim).state+GKP(d,6,delta,dim).state)
 
 a = destroy(dim)
 
@@ -79,9 +80,9 @@ ax3.plot(np.linspace(-7.5,7.5,200)[:,None],rotWx)
 ax1.text(-6,6.5,rf"$\Delta = {delta}$")
 ax1.text(-6,5.8,rf"$N = {dim}$")
 # ax1.text(-6,5.0,r"$U = e^{i\frac{\pi}{16}n^2}$")
-# ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{\sqrt(2)}(|\bar{0}\rangle_{(8)} + |\bar{4}\rangle_{(8)})$")
+ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{\sqrt(2)}(|\bar{0}\rangle_{(2)} + |\bar{4}\rangle_{(6)})$")
 # mesuring dimension of grid
 ax1.plot([0,0],[0,np.sqrt(pi)],'-',lw=1.5,color="black")
 ax1.text(np.sqrt(pi/2)/4,np.sqrt(pi)/2,r"$\sqrt{\pi}$",color="black",rotation=0)
 
-plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/figs/qubit_equiv")
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/figs/qubit_equiv,j=1")
