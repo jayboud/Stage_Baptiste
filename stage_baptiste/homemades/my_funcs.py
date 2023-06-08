@@ -56,3 +56,21 @@ def rot_wigner_clenshaw(rho, xvec, yvec, rot=0,g=np.sqrt(2), sparse=False):
             w0 = _wig_laguerre_val(L, B, diag) + w0 * A2 * (L+1)**-0.5
 
     return w0.real * np.exp(-B*0.5) * (g*g*0.5 / pi)
+
+
+def DFT_matrix(N):
+    """
+    Calculating the discrete Fourier transform matrix
+    Args:
+        N: float
+            The number of dimensions.
+
+    Returns:
+        W: ndarray
+        The DFT matrix.
+
+    """
+    i, j = np.meshgrid(np.arange(N), np.arange(N))
+    omega = np.exp(2*pi*1j/N)
+    W = np.power(omega, i*j) / np.sqrt(N)
+    return W
