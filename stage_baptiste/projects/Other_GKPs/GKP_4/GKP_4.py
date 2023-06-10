@@ -21,7 +21,8 @@ d = 4
 j = 0
 delta = 0.3
 dim = 100
-osc = 1/2*(GKP(d,0,delta,dim).state+np.exp(1j*3*pi/4)*GKP(d,1,delta,dim).state+GKP(d,2,delta,dim).state+np.exp(1j*7*pi/4)*GKP(d,3,delta,dim).state)
+# osc = 1/2*(GKP(d,0,delta,dim).state+np.exp(1j*1*pi/4)*GKP(d,1,delta,dim).state-GKP(d,2,delta,dim).state+np.exp(1j*1*pi/4)*GKP(d,3,delta,dim).state)
+osc = GKP(2,0,delta,dim).state
 
 a = destroy(dim)
 
@@ -42,7 +43,7 @@ if psi.type == 'ket' or psi.type == 'bra':
 else:
     rho = psi
 # ----- Wigner function  ---------
-angle = 0  # anticlockwise rotation
+angle = 0  # clockwise rotation
 xvec = np.linspace(-7.5, 7.5, 200)
 W0 = _wigner_clenshaw(rho, xvec, xvec)  # no rotation
 rotW0 = rot_wigner_clenshaw(rho, xvec, xvec,rot=angle)  # with pi/4 rotation
@@ -79,10 +80,11 @@ ax3.plot(np.linspace(-7.5,7.5,200)[:,None],rotWx)
 ax1.text(-6,6.5,rf"$\Delta = {delta}$")
 ax1.text(-6,5.8,rf"$N = {dim}$")
 # ax1.text(-6,5.0,r"$U = e^{i\frac{\pi}{16}n^2}$")
-ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{2}(|\bar{0}\rangle_{(4)} + e^{i3\pi/4}|\bar{1}\rangle_{(4)} +"
-                                            r"|\bar{2}\rangle_{(4)} + e^{i7\pi/4}|\bar{3}\rangle_{(4)})$")
+ax1.text(-6,5,r"$|\psi\rangle = |\bar{0}\rangle_{(2)}$")
+# ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{2}(|\bar{0}\rangle_{(4)} + e^{i\pi/4}|\bar{1}\rangle_{(4)} -"
+#                                             r"|\bar{2}\rangle_{(4)} + e^{i\pi/4}|\bar{3}\rangle_{(4)})$")
 # mesuring dimension of grid
 ax1.plot([0,0],[0,np.sqrt(pi)],'-',lw=1.5,color="black")
 ax1.text(np.sqrt(pi/2)/4,np.sqrt(pi)/2,r"$\sqrt{\pi}$",color="black",rotation=0)
 
-plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_4/figs/qubit_equiv,j={j}")
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_4/figs/qubit_equiv,j={j},d={2}")

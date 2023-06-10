@@ -21,7 +21,7 @@ d = 8
 j = 0
 delta = 0.3
 dim = 100
-osc = 1/np.sqrt(2)*(GKP(d,2,delta,dim).state+GKP(d,6,delta,dim).state)
+osc = 1/np.sqrt(2)*(GKP(d,0,delta,dim).state+GKP(d,4,delta,dim).state)
 
 a = destroy(dim)
 
@@ -42,8 +42,7 @@ if psi.type == 'ket' or psi.type == 'bra':
 else:
     rho = psi
 # ----- Wigner function  ---------
-# angle = pi/4  # anticlockwise rotation
-angle = 0  # anticlockwise rotation
+angle = pi/4  # clockwise rotation
 xvec = np.linspace(-7.5, 7.5, 200)
 W0 = _wigner_clenshaw(rho, xvec, xvec)  # no rotation
 rotW0 = rot_wigner_clenshaw(rho, xvec, xvec,rot=angle)  # with pi/4 rotation
@@ -80,9 +79,9 @@ ax3.plot(np.linspace(-7.5,7.5,200)[:,None],rotWx)
 ax1.text(-6,6.5,rf"$\Delta = {delta}$")
 ax1.text(-6,5.8,rf"$N = {dim}$")
 # ax1.text(-6,5.0,r"$U = e^{i\frac{\pi}{16}n^2}$")
-ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{\sqrt(2)}(|\bar{2}\rangle_{(8)} + |\bar{6}\rangle_{(8)})$")
+ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{\sqrt{2}}(|\bar{0}\rangle_{(8)} + |\bar{4}\rangle_{(8)})$")
 # mesuring dimension of grid
 ax1.plot([0,0],[0,np.sqrt(pi)],'-',lw=1.5,color="black")
 ax1.text(np.sqrt(pi/2)/4,np.sqrt(pi)/2,r"$\sqrt{\pi}$",color="black",rotation=0)
 
-plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/figs/qubit_equiv,j=1")
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_8/figs/qubit_equiv,j={j},d={d}")
