@@ -21,8 +21,17 @@ d = 4
 j = 0
 delta = 0.3
 dim = 100
-osc = 1/np.sqrt(2)*(0*GKP(d,0,delta,dim).state + -1*GKP(d,1,delta,dim).state + 0*GKP(d,2,delta,dim).state + 1*GKP(d,3,delta,dim).state)
+osc = 1/np.sqrt(6)*(2*GKP(d,0,delta,dim).state + 1*GKP(d,1,delta,dim).state + 0*GKP(d,2,delta,dim).state + 1*GKP(d,3,delta,dim).state)
+
+a = destroy(dim)
+n_op = a.dag()*a
+H = n_op**2
+tlist = np.linspace(0,pi/16,200)
+options = Options(store_states=True)  # get states even if e_ops are calculated
+outs = mesolve(H, osc, tlist, [], [],options=options)
+
 
 fig,ax = plt.subplots()
-ax.bar(np.arange(0, dim), osc.diag())
+ax.bar(np.arange(0, dim), np.real(outs.states[-1].diag()))
+# ax.bar(np.arange(0, dim), np.real(osc.diag()))
 plt.show()

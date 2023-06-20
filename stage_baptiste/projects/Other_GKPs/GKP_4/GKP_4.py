@@ -6,6 +6,7 @@ Code that compares qubit and qudit d=4 GKPs.
 """
 
 import numpy as np
+from numpy import sqrt
 from qutip import *
 from qutip.wigner import _wigner_clenshaw
 from stage_baptiste.homemades.finite_GKP import get_d_gkp, GKP
@@ -17,22 +18,37 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.transforms import Affine2D
 import mpl_toolkits.axisartist.floating_axes as floating_axes
 
-wigner = False
-displacement = True
+wigner = True
+displacement = False
 d = 4
 m,n = 1,1
 j = 0
 delta = 0.3
 dim = 100
 osc = 1/2*(GKP(d,0,delta,dim).state+np.exp(1j*1*pi/4)*GKP(d,1,delta,dim).state-GKP(d,2,delta,dim).state+np.exp(1j*1*pi/4)*GKP(d,3,delta,dim).state)
-orig_osc = GKP(2,0,delta,dim).state
-print(orig_osc.dag()*osc)
+# orig_osc = GKP(2,0,delta,dim).state
+# print(orig_osc.dag()*osc)
 # COMMENT FAIRE LA BONNE PROJECTION (ÉTAT EST ROTATÉ)
+
+# **************** #
+# Special middle state at pi/16
+# reste à trouver pourquoi il ne faut pas de rotation
+exp = np.exp(1j*pi/4)
+alpha_0 = sqrt(6)/2*(1 + exp)
+beta_0 = -sqrt(2)/2*(1 + exp)
+gamma_0 = (-1 + exp)
+c0 = 2*alpha_0/sqrt(6) + beta_0/sqrt(2) - gamma_0/2
+c1 = alpha_0/sqrt(6) + gamma_0/2
+c2 = beta_0/sqrt(2) + gamma_0/2
+c3 = alpha_0/sqrt(6) + gamma_0/2
+osc_cursed = 1/2*(c0*GKP(d,0,delta,dim).state+c1*GKP(d,1,delta,dim).state+c2*GKP(d,2,delta,dim).state+c3*GKP(d,3,delta,dim).state)
+# **************** #
+
 
 a = destroy(dim)
 
 # e_ops if needed
-X,Y,Z,Sx,Sp = np.sqrt(pi/2),np.sqrt(pi/2)*(1+1j),np.sqrt(pi/2)*1j,np.sqrt(2*pi),np.sqrt(2*pi)*1j
+X,Y,Z,Sx,Sp = sqrt(pi/2),sqrt(pi/2)*(1+1j),sqrt(pi/2)*1j,sqrt(2*pi),sqrt(2*pi)*1j
 Ds = [displace(dim,gamma) for gamma in [X,Y,Z,Sx,Sp]]  # X,Z,Y,Sx,Sp
 Ds_labels = ["X","Y","Z","Sx","Sp"]
 
@@ -41,18 +57,17 @@ n_op = a.dag()*a
 H = n_op**2
 tlist = np.linspace(0,pi/16,200)
 options = Options(store_states=True)  # get states even if e_ops are calculated
-outs = mesolve(H, osc, tlist, [], Ds,options=options)
-orig_outs = mesolve(H, orig_osc, tlist, [], Ds,options=options)
-psi = osc
+# outs = mesolve(H, osc, tlist, [], Ds,options=options)
+# orig_outs = mesolve(H, orig_osc, tlist, [], Ds,options=options)
+psi = osc_cursed
 if psi.type == 'ket' or psi.type == 'bra':
     rho = ket2dm(psi)
 else:
     rho = psi
 
 
-
 # ----- Wigner function  ---------
-angle = pi/4  # anticlockwise rotation
+angle = 0  # anticlockwise rotation
 xvec = np.linspace(-7.5, 7.5, 200)
 W0 = _wigner_clenshaw(rho, xvec, xvec)  # no rotation
 rotW0 = rot_wigner_clenshaw(rho, xvec, xvec,rot=angle)  # with pi/4 rotation
@@ -67,7 +82,7 @@ Wy, rotWy = W.marginal(dim=1), rotW0.mean(axis=1)[:,None]
 # mise en graphique
 if wigner:
     domain = np.arange(-4,4)
-    ticks = [i*np.sqrt(pi) for i in domain]
+    ticks = [i*sqrt(pi) for i in domain]
     ticks_name = [rf"{i}$\sqrt\pi$" for i in domain]
 
     W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
@@ -80,6 +95,8 @@ if wigner:
     ax1.set_box_aspect(1)
     ax1.set_xticks(ticks,ticks_name)
     ax1.set_yticks(ticks,ticks_name)
+    ax1.set_xlabel(r"$\hat{x}_4$",fontsize='x-large')
+    ax1.set_ylabel(r"$\hat{p}_4$",fontsize='x-large', rotation=0)
     ax1.contourf(xvec, yvec, rotW0, 100,norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
     ax2 = fig.add_subplot(gs[1],sharey=ax1)
     # ax2.plot(Wy.data,np.linspace(-7.5,7.5,250))
@@ -94,10 +111,10 @@ if wigner:
     ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{2}(|\bar{0}\rangle_{(4)} + e^{i\pi/4}|\bar{1}\rangle_{(4)} -"
                                                 r"|\bar{2}\rangle_{(4)} + e^{i\pi/4}|\bar{3}\rangle_{(4)})$")
     # mesuring dimension of grid
-    ax1.plot([0,0],[0,np.sqrt(pi)],'-',lw=1.5,color="black")
-    ax1.text(np.sqrt(pi/2)/4,np.sqrt(pi)/2,r"$\sqrt{\pi}$",color="black",rotation=0)
+    ax1.plot([0,0],[0,sqrt(pi)],'-',lw=1.5,color="black")
+    ax1.text(sqrt(pi/2)/4,sqrt(pi)/2,r"$\sqrt{\pi}$",color="black",rotation=0)
 
-    plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_4/figs/qubit_equiv,j={j},d={d}")
+    plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_4/figs/middle_state,j={j},d={d}")
 
 
 # average of displacements for H
