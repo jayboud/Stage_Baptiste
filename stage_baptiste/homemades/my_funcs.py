@@ -17,7 +17,7 @@ def rot_wigner_clenshaw(rho, xvec, yvec, rot=0,g=np.sqrt(2), sparse=False):
     Using Clenshaw summation - numerically stable and efficient
     iterative algorithm to evaluate polynomial series.
 
-    ** I added the clockwise rotation of the meshgrid ** -Jay
+    ** I added the anticlockwise rotation of the meshgrid ** -Jay
 
     The Wigner function is calculated as
     :math:`W = e^(-0.5*x^2)/pi * \sum_{L} c_L (2x)^L / \sqrt(L!)` where
