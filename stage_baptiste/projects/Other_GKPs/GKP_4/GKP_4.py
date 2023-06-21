@@ -36,7 +36,7 @@ osc = 1/2*(GKP(d,0,delta,dim).state+np.exp(1j*1*pi/4)*GKP(d,1,delta,dim).state-G
 exp = np.exp(1j*pi/4)
 alpha_0 = sqrt(6)/2*(1 + exp)
 beta_0 = -sqrt(2)/2*(1 + exp)
-gamma_0 = (-1 + exp)
+gamma_0 = (-1 + exp)*exp
 c0 = 2*alpha_0/sqrt(6) + beta_0/sqrt(2) - gamma_0/2
 c1 = alpha_0/sqrt(6) + gamma_0/2
 c2 = beta_0/sqrt(2) + gamma_0/2
@@ -95,8 +95,12 @@ if wigner:
     ax1.set_box_aspect(1)
     ax1.set_xticks(ticks,ticks_name)
     ax1.set_yticks(ticks,ticks_name)
-    ax1.set_xlabel(r"$\hat{x}_4$",fontsize='x-large')
-    ax1.set_ylabel(r"$\hat{p}_4$",fontsize='x-large', rotation=0)
+    if angle:
+        ax1.set_xlabel(r"$\hat{x}_4$",fontsize='x-large')
+        ax1.set_ylabel(r"$\hat{p}_4$",fontsize='x-large', rotation=0)
+    if not angle:
+        ax1.set_xlabel(r"$\hat{x}$",fontsize='x-large')
+        ax1.set_ylabel(r"$\hat{p}$",fontsize='x-large', rotation=0)
     ax1.contourf(xvec, yvec, rotW0, 100,norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
     ax2 = fig.add_subplot(gs[1],sharey=ax1)
     # ax2.plot(Wy.data,np.linspace(-7.5,7.5,250))
