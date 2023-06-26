@@ -64,7 +64,7 @@ else:
     rho = psi
 
 
-# ----- Wigner function  ---------
+# ----- Wigner function, meshgrid rotation  ---------
 angle = 0  # anticlockwise graphic rotation
 xvec = np.linspace(-7.5, 7.5, 200)
 W0 = _wigner_clenshaw(rho, xvec, xvec)  # no rotation

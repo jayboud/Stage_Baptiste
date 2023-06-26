@@ -18,7 +18,7 @@ from matplotlib.transforms import Affine2D
 import mpl_toolkits.axisartist.floating_axes as floating_axes
 
 graph_wigner = False
-second_part = False
+second_part = True
 d = 8
 m,n = 0,2
 j = 0
@@ -49,7 +49,7 @@ if psi.type == 'ket' or psi.type == 'bra':
     rho = ket2dm(psi)
 else:
     rho = psi
-# ----- Wigner function  ---------
+# ----- Wigner function, meshgrid rotation  ---------
 angle = 0  # anticlockwise rotation
 xvec = np.linspace(-7.5, 7.5, 200)
 W0 = _wigner_clenshaw(rho, xvec, xvec)  # no rotation
@@ -103,7 +103,7 @@ if graph_wigner:
 Author : Jeremie Boudreault
 Date: 11/05/2022
 
-Code that compares qubit and qudit d=8 GKPs.
+Code that compares qubit and qudit d=10 GKPs.
 """
 
 import numpy as np
@@ -149,8 +149,8 @@ if second_part:
         rho = ket2dm(psi)
     else:
         rho = psi
-    # ----- Wigner function  ---------
-    angle = np.arctan(1/2)  # anticlockwise rotation
+    # ----- Wigner function, meshgrid rotation  ---------
+    angle = 0  # anticlockwise rotation
     xvec = np.linspace(-7.5, 7.5, 200)
     W0 = _wigner_clenshaw(rho, xvec, xvec)  # no rotation
     rotW0 = rot_wigner_clenshaw(rho, xvec, xvec,rot=angle)  # with pi/4 rotation
