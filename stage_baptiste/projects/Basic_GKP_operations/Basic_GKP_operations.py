@@ -85,14 +85,15 @@ plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basi
 # sqrtH gate
 
 
-# n = a.dag()*a
-# H = n*n
-#
-# tf = pi/8
-# # tlist = np.linspace(0,tf,150)  # times for animation
+n = a.dag()*a
+H = n*n
+
+tf = pi/8
+tlist = np.linspace(0,tf,500)  # times for animation
 # tlist = np.linspace(0,tf,1200)  # times for expectation values
-# options = Options(store_states=True)  # get states even if e_ops are calculated
-# outs = [mesolve(H, osc, tlist, [], [D],options=options) for D in Ds]
+options = Options(store_states=True)  # get states even if e_ops are calculated
+one_osc = osc = GKP(2,0,delta,dim).state
+outs = [mesolve(H, one_osc, tlist, [], [D],options=options) for D in Ds]
 
 
 # sqrtH Wigner function
@@ -107,39 +108,39 @@ plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basi
 # sqrtH Wigner function animation
 
 
-# debut = np.zeros(4,dtype=int).tolist()
-# fin = (tf*np.ones(4)).tolist()
-# gif_tlist = debut+tlist.tolist()+fin  # times (0 to 3pi/8) with supplementary 0s and 3pi/8s for gif
-# frames = debut+np.arange(0,len(tlist),1).tolist()+(range(len(tlist))[-1]*np.ones(4,dtype=int)).tolist()  # index (0,1,2,3,...)
-# fig, ax = plt.subplots(figsize=(5, 4))
-# ax.set_xlabel(r'$\rm{Re}(\alpha)$', fontsize=12)
-# ax.set_ylabel(r'$\rm{Im}(\alpha)$', fontsize=12)
-# ax.set_title("Wigner function", fontsize=12)
-# xvec = np.linspace(-7.5, 7.5, 200)
-# W0 = wigner(outs[0].states[0], xvec, xvec)
-# W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
-# wlim = abs(W).max()
-# cax = ax.contourf(xvec, yvec, W, 100,norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
-#
-#
-# def animate(i):
-#     ax.clear()
-#     ax.set_xlabel(r'$\rm{Re}(\alpha)$', fontsize=12)
-#     ax.set_ylabel(r'$\rm{Im}(\alpha)$', fontsize=12)
-#     ax.set_title("Wigner function", fontsize=12)
-#     W0 = wigner(outs[0].states[i], xvec, xvec)
-#     W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
-#     ax.contourf(xvec, yvec, W, 100, norm=mpl.colors.Normalize(-wlim, wlim), cmap=mpl.colormaps['RdBu'])
-#     ax.text(0.02,0.75,rf"$t = {round(gif_tlist[i],4)}$",ha='left', va='top', transform=ax.transAxes)
-#     ax.text(0.02,0.8,r"$H = n^2$",ha='left', va='top', transform=ax.transAxes)
-#     ax.text(0.02,0.85,rf"$\Delta = {delta}$",ha='left', va='top', transform=ax.transAxes)
-#     ax.text(0.02,0.9,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
-#
-#
-# anim = FuncAnimation(
-#     fig, animate, interval=100, frames=frames)
-# anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
-#           "Wigner_animation_sqrtH.gif")
+debut = np.zeros(4,dtype=int).tolist()
+fin = (tf*np.ones(4)).tolist()
+gif_tlist = debut+tlist.tolist()+fin  # times (0 to 3pi/8) with supplementary 0s and 3pi/8s for gif
+frames = debut+np.arange(0,len(tlist),1).tolist()+(range(len(tlist))[-1]*np.ones(4,dtype=int)).tolist()  # index (0,1,2,3,...)
+fig, ax = plt.subplots(figsize=(5, 4))
+ax.set_xlabel(r'$\rm{Re}(\alpha)$', fontsize=12)
+ax.set_ylabel(r'$\rm{Im}(\alpha)$', fontsize=12)
+ax.set_title("Wigner function", fontsize=12)
+xvec = np.linspace(-7.5, 7.5, 200)
+W0 = wigner(outs[0].states[0], xvec, xvec)
+W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
+wlim = abs(W).max()
+cax = ax.contourf(xvec, yvec, W, 100,norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
+
+
+def animate(i):
+    ax.clear()
+    ax.set_xlabel(r'$\rm{Re}(\alpha)$', fontsize=12)
+    ax.set_ylabel(r'$\rm{Im}(\alpha)$', fontsize=12)
+    ax.set_title("Wigner function", fontsize=12)
+    W0 = wigner(outs[0].states[i], xvec, xvec)
+    W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
+    ax.contourf(xvec, yvec, W, 100, norm=mpl.colors.Normalize(-wlim, wlim), cmap=mpl.colormaps['RdBu'])
+    ax.text(0.02,0.75,rf"$t = {round(gif_tlist[i],4)}$",ha='left', va='top', transform=ax.transAxes)
+    ax.text(0.02,0.8,r"$H = n^2$",ha='left', va='top', transform=ax.transAxes)
+    ax.text(0.02,0.85,rf"$\Delta = {delta}$",ha='left', va='top', transform=ax.transAxes)
+    ax.text(0.02,0.9,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
+
+
+anim = FuncAnimation(
+    fig, animate, interval=100, frames=frames)
+anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
+          "1s_Wigner_animation_sqrtH.gif")
 
 
 # average of displacements for sqrtH

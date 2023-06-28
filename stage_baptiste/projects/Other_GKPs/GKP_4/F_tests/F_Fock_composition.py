@@ -41,7 +41,7 @@ F4 = 1/np.sqrt(2)*(0*GKP(d,0,delta,dim).state+
 
 # le delta n'affecte pas tous les états de la même façon
 # vu le différent support de chacun dans l'espace de Fock
-i = 3
+i = 4
 if i == 1:
     osc = F1
 elif i == 2:
@@ -61,9 +61,12 @@ f_coeffs = np.squeeze(outs.states[-1][:,0])
 
 
 fig,ax = plt.subplots()
-ax.bar(np.arange(0, dim), np.real(coeffs))
-ax.bar(np.arange(0, dim)+1, np.imag(coeffs))
-fig.suptitle(rf"Fock composition of $ |F_{i}\rangle$")
+ax.set_xlabel(r"$n$")
+ax.set_ylabel(r"$c_n$",rotation=0)
+ax.bar(np.arange(0, dim), np.real(coeffs),label=r"Real")
+ax.bar(np.arange(0, dim)+1, np.imag(coeffs),label=r"Imaginary")
+plt.legend()
+# fig.suptitle(rf"Fock composition of $ |F_{i}\rangle$")
 plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_4/F_tests/figs/F_{i}_fock_comp")
 
 fig,ax = plt.subplots()

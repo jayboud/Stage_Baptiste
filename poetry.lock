@@ -214,11 +214,11 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "dask"
-version = "2023.5.0"
+version = "2023.6.1"
 description = "Parallel PyData with Task Scheduling"
 category = "main"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 
 [package.dependencies]
 click = ">=8.0"
@@ -235,8 +235,8 @@ array = ["numpy (>=1.21)"]
 complete = ["dask", "pyarrow (>=7.0)", "lz4 (>=4.3.2)"]
 dataframe = ["numpy (>=1.21)", "pandas (>=1.3)"]
 diagnostics = ["bokeh (>=2.4.2)", "jinja2 (>=2.10.3)"]
-distributed = ["distributed (==2023.5.0)"]
-test = ["pandas", "pytest", "pytest-rerunfailures", "pytest-xdist", "pre-commit"]
+distributed = ["distributed (==2023.6.1)"]
+test = ["pandas", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist", "pre-commit"]
 
 [[package]]
 name = "decorator"
@@ -784,7 +784,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "pydantic"
-version = "1.10.7"
+version = "1.10.9"
 description = "Data validation and settings management using python type hints"
 category = "main"
 optional = false
@@ -1093,6 +1093,23 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "tqdm"
+version = "4.65.0"
+description = "Fast, Extensible Progress Meter"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[package.extras]
+dev = ["py-make (>=0.1.0)", "twine", "wheel"]
+notebook = ["ipywidgets (>=6)"]
+slack = ["slack-sdk"]
+telegram = ["requests"]
+
+[[package]]
 name = "traitlets"
 version = "5.9.0"
 description = "Traitlets Python configuration system"
@@ -1173,7 +1190,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "57f2258860b5db4c43f2a7d3c1e7d2250b8cbe87415326422eb74b6a38ea5f5a"
+content-hash = "51acbf1ad4b9467125f309a480c38d198564051ba59b5d5bd597b54e557a7753"
 
 [metadata.files]
 antlr4-python3-runtime = []
@@ -1260,6 +1277,7 @@ tinycss2 = []
 toml = []
 tomli = []
 toolz = []
+tqdm = []
 traitlets = []
 typing-extensions = []
 urllib3 = []

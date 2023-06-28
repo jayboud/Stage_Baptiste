@@ -22,12 +22,12 @@ def get_d_gkp(d, j, delta, hilbert_dim, peak_range=10):
     Args:
     d: int
         The dimension of codespace
-    delta: int of float
-        The index of the GKP state in regular space.
-    hilbert_dim: int
-        The number of dimensions of the Hilbert space (Fock space).
     j: int
         The number of the logical state.
+    delta: int of float
+        The enveloppe of the finite GKP.
+    hilbert_dim: int
+        The number of dimensions of the Hilbert space (Fock space).
     peak_range: int
         The number of peaks (at x>=0) that we want to
         consider, taken to be 10 by default.
