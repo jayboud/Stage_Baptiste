@@ -62,13 +62,14 @@ def opListsBs2(GKP):
     return Klist
 
 
-def color_map(initial_state,H,t_gate,max_error_rate,max_N_rounds,fig_save_path,
-              mode='fid',t_num=10,kap_num=10,rounds_steps=1,save=True,show=False):
+def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,fig_save_path,mode='fid',t_num=10,kap_num=10,
+              rounds_steps=1,superposition_state=None,ss_hilbert_dim=None,ss_d=None,save=True,show=False):
     """
     Function that calculates and plot a fidelity or probability colormap
     Args:
-        initial_state: Qobj (ket)
-            The initial state to apply and correct errors on.
+        GKP_obj: GKP object or None if superposition_state
+            The object containing everything relevant
+            on the initial state to apply and correct errors on.
         H: Qobj (operator)
             The hamiltonian used to evolve the initial state.
         t_gate: float
@@ -80,7 +81,6 @@ def color_map(initial_state,H,t_gate,max_error_rate,max_N_rounds,fig_save_path,
             procedure (one procedure includes x and p correction).
         fig_save_path: string
             The path and the name of the saved colormap.
-    Keyword Args:
         mode: string 'fid' or 'prob'
             Decides wether to get the fidelity or probability colormap.
         t_num: int
@@ -90,6 +90,10 @@ def color_map(initial_state,H,t_gate,max_error_rate,max_N_rounds,fig_save_path,
             The number of samples to generate to compare error rates.
         rounds_steps: int
             The step between the number of error correcting rounds to compare.
+        superposition_state: Qobj (ket)
+            If the initial state is a superposition of many GKP.
+        ss_hilbert_dim: int
+            The hilbert dimension in Fock space of states in the superposition state.
         save: bool
             Saving the figure.
         show: bool
@@ -99,8 +103,27 @@ def color_map(initial_state,H,t_gate,max_error_rate,max_N_rounds,fig_save_path,
     the error rate on the x axis and the number of error correcting rounds on the y axis.
 
     """
-    t_list = np.linspace(0,t_gate,t_num)
+    if superposition_state:
+        if GKP_obj:
+            raise ValueError("You have to choose between a normal GKP state or a superposition.")
+        if not ss_hilbert_dim:
+            raise ValueError("You have to specify the hilbert dimension in Fock space of states"
+                             "composing your superposition with the parameter 'ss_hilbert_dim'.")
+        the_GKP = GKP()  # ---------------- #
+        state = superposition_state
+        dim = ss_hilbert_dim
+    else:
+        the_GKP = GKP_obj
+        state = GKP.state
+        dim = GKP.hilbert_dim
+    t_list = np.linspace(0, t_gate, t_num)
     kap_max = max_error_rate/t_gate
     kap_list = np.linspace(0,kap_max,kap_num)
     rounds = np.arange(0,max_N_rounds,rounds_steps)
+    a = destroy(dim)
+    e_states = [mesolve(H,state,t_list,[np.sqrt(kap)*a],[]).states[-1] for kap in kap_list]
+    opLists = opListsBs2(GKP)
+    coin = np.random.random()
+    if coin < 0.25:
+        correction = 1.  # ---------- #
     return
