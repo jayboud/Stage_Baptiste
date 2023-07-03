@@ -8,7 +8,8 @@ Making various basic calculation using finite_GKP.py .
 import numpy as np
 
 from qutip import *
-from stage_baptiste.homemades.finite_GKP import get_d_gkp, GKP
+from stage_baptiste.homemades.finite_GKP import GKP
+from stage_baptiste.homemades.general_funcs import *
 from scipy.constants import pi
 import matplotlib as mpl
 from matplotlib import pyplot as plt
@@ -38,17 +39,17 @@ H = a.dag()*a
 
 
 # wigner function of d_GKP and some gate on it, with marginals
-_,_,d_osc = get_d_gkp(2,0,delta,dim)  # oscillator with d states
-W = WignerDistribution(d_osc, extent=[[-7.5, 7.5], [-7.5, 7.5]])
-Wx = W.marginal(dim=0)
-Wy = W.marginal(dim=1)
-W.visualize()
-Wx.visualize()
-Wy.visualize()
-fig, ax = plot_wigner(d_osc)
-ax.text(-6,6,rf"$\Delta = {delta}$")
-ax.text(-6,5,rf"$N = {dim}$")
-plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/GKP_{dim}")
+# _,_,d_osc = get_d_gkp(2,0,delta,dim)  # oscillator with d states
+# W = WignerDistribution(d_osc, extent=[[-7.5, 7.5], [-7.5, 7.5]])
+# Wx = W.marginal(dim=0)
+# Wy = W.marginal(dim=1)
+# W.visualize()
+# Wx.visualize()
+# Wy.visualize()
+# fig, ax = plot_wigner(d_osc)
+# ax.text(-6,6,rf"$\Delta = {delta}$")
+# ax.text(-6,5,rf"$N = {dim}$")
+# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/GKP_{dim}")
 
 
 # n = a.dag()*a
@@ -85,15 +86,15 @@ plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basi
 # sqrtH gate
 
 
-n = a.dag()*a
-H = n*n
+# n = a.dag()*a
+# H = n*n
 
-tf = pi/8
-tlist = np.linspace(0,tf,500)  # times for animation
+# tf = pi/8
+# tlist = np.linspace(0,tf,500)  # times for animation
 # tlist = np.linspace(0,tf,1200)  # times for expectation values
-options = Options(store_states=True)  # get states even if e_ops are calculated
-one_osc = osc = GKP(2,0,delta,dim).state
-outs = [mesolve(H, one_osc, tlist, [], [D],options=options) for D in Ds]
+# options = Options(store_states=True)  # get states even if e_ops are calculated
+# one_osc = osc = GKP(2,0,delta,dim).state
+# outs = [mesolve(H, one_osc, tlist, [], [D],options=options) for D in Ds]
 
 
 # sqrtH Wigner function
@@ -108,39 +109,39 @@ outs = [mesolve(H, one_osc, tlist, [], [D],options=options) for D in Ds]
 # sqrtH Wigner function animation
 
 
-debut = np.zeros(4,dtype=int).tolist()
-fin = (tf*np.ones(4)).tolist()
-gif_tlist = debut+tlist.tolist()+fin  # times (0 to 3pi/8) with supplementary 0s and 3pi/8s for gif
-frames = debut+np.arange(0,len(tlist),1).tolist()+(range(len(tlist))[-1]*np.ones(4,dtype=int)).tolist()  # index (0,1,2,3,...)
-fig, ax = plt.subplots(figsize=(5, 4))
-ax.set_xlabel(r'$\rm{Re}(\alpha)$', fontsize=12)
-ax.set_ylabel(r'$\rm{Im}(\alpha)$', fontsize=12)
-ax.set_title("Wigner function", fontsize=12)
-xvec = np.linspace(-7.5, 7.5, 200)
-W0 = wigner(outs[0].states[0], xvec, xvec)
-W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
-wlim = abs(W).max()
-cax = ax.contourf(xvec, yvec, W, 100,norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
-
-
-def animate(i):
-    ax.clear()
-    ax.set_xlabel(r'$\rm{Re}(\alpha)$', fontsize=12)
-    ax.set_ylabel(r'$\rm{Im}(\alpha)$', fontsize=12)
-    ax.set_title("Wigner function", fontsize=12)
-    W0 = wigner(outs[0].states[i], xvec, xvec)
-    W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
-    ax.contourf(xvec, yvec, W, 100, norm=mpl.colors.Normalize(-wlim, wlim), cmap=mpl.colormaps['RdBu'])
-    ax.text(0.02,0.75,rf"$t = {round(gif_tlist[i],4)}$",ha='left', va='top', transform=ax.transAxes)
-    ax.text(0.02,0.8,r"$H = n^2$",ha='left', va='top', transform=ax.transAxes)
-    ax.text(0.02,0.85,rf"$\Delta = {delta}$",ha='left', va='top', transform=ax.transAxes)
-    ax.text(0.02,0.9,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
-
-
-anim = FuncAnimation(
-    fig, animate, interval=100, frames=frames)
-anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
-          "1s_Wigner_animation_sqrtH.gif")
+# debut = np.zeros(4,dtype=int).tolist()
+# fin = (tf*np.ones(4)).tolist()
+# gif_tlist = debut+tlist.tolist()+fin  # times (0 to 3pi/8) with supplementary 0s and 3pi/8s for gif
+# frames = debut+np.arange(0,len(tlist),1).tolist()+(range(len(tlist))[-1]*np.ones(4,dtype=int)).tolist()  # index (0,1,2,3,...)
+# fig, ax = plt.subplots(figsize=(5, 4))
+# ax.set_xlabel(r'$\rm{Re}(\alpha)$', fontsize=12)
+# ax.set_ylabel(r'$\rm{Im}(\alpha)$', fontsize=12)
+# ax.set_title("Wigner function", fontsize=12)
+# xvec = np.linspace(-7.5, 7.5, 200)
+# W0 = wigner(outs[0].states[0], xvec, xvec)
+# W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
+# wlim = abs(W).max()
+# cax = ax.contourf(xvec, yvec, W, 100,norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
+#
+#
+# def animate(i):
+#     ax.clear()
+#     ax.set_xlabel(r'$\rm{Re}(\alpha)$', fontsize=12)
+#     ax.set_ylabel(r'$\rm{Im}(\alpha)$', fontsize=12)
+#     ax.set_title("Wigner function", fontsize=12)
+#     W0 = wigner(outs[0].states[i], xvec, xvec)
+#     W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
+#     ax.contourf(xvec, yvec, W, 100, norm=mpl.colors.Normalize(-wlim, wlim), cmap=mpl.colormaps['RdBu'])
+#     ax.text(0.02,0.75,rf"$t = {round(gif_tlist[i],4)}$",ha='left', va='top', transform=ax.transAxes)
+#     ax.text(0.02,0.8,r"$H = n^2$",ha='left', va='top', transform=ax.transAxes)
+#     ax.text(0.02,0.85,rf"$\Delta = {delta}$",ha='left', va='top', transform=ax.transAxes)
+#     ax.text(0.02,0.9,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
+#
+#
+# anim = FuncAnimation(
+#     fig, animate, interval=100, frames=frames)
+# anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
+#           "1s_Wigner_animation_sqrtH.gif")
 
 
 # average of displacements for sqrtH
@@ -157,3 +158,14 @@ anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_G
 # plt.title("Valeur moyenne du déplacement en fonction du temps")
 # plt.legend()
 # plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/sqrtH_Davg_{dim}")
+
+
+# chi function
+j = 0
+delta = 0.25
+dim = 75
+qubit = GKP(2,j,delta,dim)
+rho = qubit.state*qubit.state.dag()
+chi_l = chi_function(rho,7.5)
+plot_chi(chi_l)
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/chi_qubit_j={j}")

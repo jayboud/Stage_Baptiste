@@ -8,7 +8,8 @@ import numpy as np
 from qutip import *
 from scipy.constants import pi
 from stage_baptiste.homemades.finite_GKP import GKP
-from stage_baptiste.homemades.KrausOperator_JV import opListsBs2
+from stage_baptiste.homemades.general_funcs import *
+from stage_baptiste.homemades.KrausOperator_JV import *
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -17,6 +18,7 @@ j = 0
 delta = 0.15
 dim = 75
 qubit = GKP(2,j,delta,dim)
+rho = qubit.state*qubit.state.dag()
 
 
 # getting useful ops
@@ -31,6 +33,7 @@ Kgg = Klist[0][0]*Klist[1][0]
 Kge = Klist[0][0]*Klist[1][1]
 Keg = Klist[0][1]*Klist[1][0]
 Kee = Klist[0][1]*Klist[1][1]
+errors_list = [Kgg,Kge,Keg,Kee]
 
 xvec = np.linspace(-5,5,200)
 
@@ -42,6 +45,7 @@ xvec = np.linspace(-5,5,200)
 # psi = rot.states[-1]
 # -------------------------------------------------------------------
 psi = qubit.state
+p_errors_list = [error_prob(error,psi) for error in errors_list]
 # psi = basis(Ncav)  # Test by starting from vacuum, always measuring g
 fig, axes = plt.subplots(3, 3, figsize=(12,12))
 for i in range(9):

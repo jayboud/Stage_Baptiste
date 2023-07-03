@@ -10,7 +10,7 @@ import numpy as np
 from qutip import *
 from qutip.wigner import _wigner_clenshaw
 from stage_baptiste.homemades.finite_GKP import get_d_gkp, GKP
-from stage_baptiste.homemades.my_funcs import rot_wigner_clenshaw
+from stage_baptiste.homemades.general_funcs import rot_wigner_clenshaw
 from scipy.constants import pi
 import matplotlib as mpl
 import matplotlib.pyplot as plt

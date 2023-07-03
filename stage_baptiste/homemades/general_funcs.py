@@ -10,10 +10,81 @@ from qutip.wigner import _wig_laguerre_val, _csr_get_diag
 from qutip import *
 from stage_baptiste.homemades.finite_GKP import get_d_gkp, GKP
 from scipy.constants import pi
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+
+def chi_function(rho,z_max):
+    """
+
+    Args:
+        rho: ndarray
+            The density matrix.
+        z_max:  float (real)
+            The maximum phase to calculate it"s
+            displacement over one dimension.
+
+    Returns:
+        chi_s: list of ndarrays
+            The characteristic function chi_s(z,z^*) and xvec
+
+
+    """
+    rho_arr = np.array(rho)[:,:,None,None]
+    xvec = np.linspace(-z_max,z_max,200)
+    x,y = np.meshgrid(xvec,xvec)
+    z = (x+1j*y)[None,None]
+    zc = np.conj(z)
+    print(z,zc)
+    dimension = rho.shape[0]
+    a = destroy(dimension)
+    a_ar, adag_ar = [np.array(op)[:,:,None,None] for op in [a,a.dag()]]
+    chi_s = np.trace(rho_arr*np.exp(1j*zc*adag_ar + 1j*z*a_ar))
+    return [chi_s,xvec]
+
+
+def plot_chi(chi_l):
+    """
+
+    Args:
+        fig: Figure object
+            The figure on which to plot.
+        ax: Axes object
+            The ax on which to plot.
+        chi_l: list of ndarrays
+            The characteristic function and xvec.
+
+
+    Returns:
+    """
+    fig,axs = plt.subplots(1,2,figsize=(8,4))
+    chi_s,xvec = chi_l
+    chi_lim = abs(chi_s).max()
+    axs[0].contourf(xvec, xvec, np.real(chi_s), 100,norm=mpl.colors.Normalize(-chi_lim, chi_lim),cmap=mpl.colormaps['seismic'])
+    axs[0].set_title(r"$\Re[\chi_s]$")
+    axs[1].contourf(xvec, xvec, np.imag(chi_s), 100,norm=mpl.colors.Normalize(-chi_lim, chi_lim),cmap=mpl.colormaps['seismic'])
+    axs[1].set_title(r"$\Im[\chi_s]$")
+    return
+
+
+def error_prob(error,state):
+    """
+    Function to calcultate the probability of an error to occur.
+    Args:
+        error: ndarray
+            The error matrix.
+        state: ndarray
+            The state vector.
+
+    Returns:
+        The probability that this error occurs.
+
+    """
+    return np.linalg.norm(error*state)**2
 
 
 def rot_wigner_clenshaw(rho, xvec, yvec, rot=0,g=np.sqrt(2), sparse=False):
-    r"""
+    """
     Using Clenshaw summation - numerically stable and efficient
     iterative algorithm to evaluate polynomial series.
 
