@@ -138,7 +138,7 @@ def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,mode='fid',t_num=10,k
     the error rate on the x axis and the number of error correcting rounds on the y axis.
 
     """
-    if mode is not 'fid' or 'prob':
+    if mode not in ['fid','prob']:
         raise ValueError("You have to choose a valid mode ('fid' or 'prob')")
     if superposition_state:
         if GKP_obj:
@@ -166,7 +166,11 @@ def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,mode='fid',t_num=10,k
     rate_list = np.linspace(0,max_error_rate,kap_num)
     N_rounds = np.arange(0,max_N_rounds,N_rounds_steps)
     a = destroy(dim)
-    e_states = [mesolve(H,state,t_list,[np.sqrt(kap)*a],[]).states[-1] for kap in kap_list]
+    e_states = []
+    for count,kap in enumerate(kap_list):
+        options = Options(nsteps=2000)
+        e_states.append(mesolve(-H,state,t_list,[np.sqrt(kap)*a],[],options=options).states[-1])
+        print(f"e_states {count} done.")
     opList = opListsBs2(the_GKP)
     corrections = [opList[0][0]*opList[1][0],opList[0][0]*opList[1][1],  # [Bgg, Bge
                    opList[0][1]*opList[1][0],opList[0][1]*opList[1][1]]  # Beg, Bee]
@@ -186,15 +190,16 @@ def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,mode='fid',t_num=10,k
     xvec,yvec = rate_list,N_rounds
     fig,ax = plt.subplots()
     if mode == 'fid':
-        cf = ax.contourf(xvec,yvec,np.reshape(fid_arr,(len(kap_list),len(N_rounds))).T,cmap="seismic")
+        cf = ax.pcolormesh(xvec,yvec,np.reshape(fid_arr,(len(kap_list),len(N_rounds))).T,cmap="seismic")
         fig.suptitle("Fidelity map")
     elif mode == 'prob':
-        cf = ax.contourf(xvec,yvec,np.reshape(prob_arr,(len(kap_list),len(N_rounds))).T,cmap="seismic")
+        cf = ax.pcolormesh(xvec,yvec,np.reshape(prob_arr,(len(kap_list),len(N_rounds))).T,cmap="seismic")
         fig.suptitle("Probability map")
-    ax.legend()
     fig.colorbar(cf,ax=ax)
+    ax.set_xlabel(r"$\kappa t_{\text{gate}}$")
+    ax.set_ylabel("N_rounds")
     if save:
-        plt.savefig(fig_save_path+fig_name)
+        plt.savefig(fig_path+fig_name)
     if show:
         plt.show()
     return

@@ -14,7 +14,7 @@ from stage_baptiste.homemades.KrausOperator_JV import color_map
 d = 2
 j = 0
 delta = 0.15
-hilbert_dim = 100
+hilbert_dim = 75
 a = destroy(hilbert_dim)
 N_op = a.dag()*a
 
@@ -24,5 +24,5 @@ tgate = pi/8
 max_error_rate = 2
 max_N_rounds = 10
 fig_name = f"first_cmap"
-fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs"
+fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/"
 color_map(GKP_obj, H, tgate, max_error_rate, max_N_rounds, fig_name=fig_name, fig_path=fig_path)
