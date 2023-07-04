@@ -62,12 +62,40 @@ def opListsBs2(GKP):
     return Klist
 
 
-def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,fig_save_path,mode='fid',t_num=10,kap_num=10,
-              rounds_steps=1,superposition_state=None,ss_hilbert_dim=None,ss_d=None,save=True,show=False):
+def get_correction_ix():
     """
-    Function that calculates and plot a fidelity or probability colormap
+    Function that randomly picks an
+    index for a list of corrections of len=4.
+
+    Returns: int
+        The index.
+
+    """
+    correction_ix = None
+    coin = np.random.random()
+    if coin < 0.25:
+        correction_ix = 0
+    elif 0.25 <= coin < 0.5:
+        correction_ix = 1
+    elif 0.5 <= coin < 0.75:
+        correction_ix = 2
+    elif 0.75 <= coin < 1:
+        correction_ix = 3
+    elif coin == 1:
+        get_correction_ix()
+    return correction_ix
+
+
+def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,mode='fid',t_num=10,kap_num=10,N_rounds_steps=1,
+              superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,fig_name=None,fig_path=None,
+              save=True,show=False):
+    """
+    Function that calculates and plot a fidelity or probability colormap of sBs error correction
+    protocol applied to a state evolving under photon loss error sqrt(kappa)*a . The x and y axis
+    of the colormap are respectively the dimensionless error rate kappa*tgate (kappa is in tgate units)
+    and the number of error correcting rounds.
     Args:
-        GKP_obj: GKP object or None if superposition_state
+        GKP_obj: GKP object (None if superposition_state)
             The object containing everything relevant
             on the initial state to apply and correct errors on.
         H: Qobj (operator)
@@ -79,8 +107,6 @@ def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,fig_save_path,mode='f
         max_N_rounds: int
             The number of times to apply the error correcting
             procedure (one procedure includes x and p correction).
-        fig_save_path: string
-            The path and the name of the saved colormap.
         mode: string 'fid' or 'prob'
             Decides wether to get the fidelity or probability colormap.
         t_num: int
@@ -88,42 +114,87 @@ def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,fig_save_path,mode='f
             the evolution of the state under the gate.
         kap_num: int
             The number of samples to generate to compare error rates.
-        rounds_steps: int
+        N_rounds_steps: int
             The step between the number of error correcting rounds to compare.
         superposition_state: Qobj (ket)
-            If the initial state is a superposition of many GKP.
-        ss_hilbert_dim: int
+            The initial state as a superposition of many GKP.states .
+        ss_d: int (if superposition_state)
+            The number d of logical states of the qudit space
+            of states in the superposition.
+        ss_delta: float (if superposition)
+            The enveloppe on the finite stats of the superposition.
+        ss_hilbert_dim: int (if superposition_state)
             The hilbert dimension in Fock space of states in the superposition state.
+        fig_name: string
+            The name under which to save the figure.
+        fig_path: string
+            The path and the name of the saved colormap.
         save: bool
             Saving the figure.
         show: bool
             Showing the figure.
 
-    Returns a matplotlib figure of the desired colormap (fidelity or probability) with
+    Creates a matplotlib figure of the desired colormap (fidelity or probability) with
     the error rate on the x axis and the number of error correcting rounds on the y axis.
 
     """
+    if mode is not 'fid' or 'prob':
+        raise ValueError("You have to choose a valid mode ('fid' or 'prob')")
     if superposition_state:
         if GKP_obj:
             raise ValueError("You have to choose between a normal GKP state or a superposition.")
+        if not ss_d:
+            raise ValueError("You have to specify the qudit d"
+                             "composing your superposition with the kwarg 'ss_d'.")
+        if not ss_delta:
+            raise ValueError("You have to specify the enveloppe of states composing"
+                             " your superposition with the kwarg 'ss_delta.")
         if not ss_hilbert_dim:
             raise ValueError("You have to specify the hilbert dimension in Fock space of states"
-                             "composing your superposition with the parameter 'ss_hilbert_dim'.")
-        the_GKP = GKP()  # ---------------- #
+                             "composing your superposition with the kwarg 'ss_hilbert_dim'.")
+        the_GKP = GKP(ss_d, 0, ss_delta, ss_hilbert_dim)  # creating a |0>_d state GKP object by default to put in opListsBs2
         state = superposition_state
         dim = ss_hilbert_dim
+
     else:
         the_GKP = GKP_obj
-        state = GKP.state
-        dim = GKP.hilbert_dim
+        state = the_GKP.state
+        dim = the_GKP.hilbert_dim
     t_list = np.linspace(0, t_gate, t_num)
     kap_max = max_error_rate/t_gate
     kap_list = np.linspace(0,kap_max,kap_num)
-    rounds = np.arange(0,max_N_rounds,rounds_steps)
+    rate_list = np.linspace(0,max_error_rate,kap_num)
+    N_rounds = np.arange(0,max_N_rounds,N_rounds_steps)
     a = destroy(dim)
     e_states = [mesolve(H,state,t_list,[np.sqrt(kap)*a],[]).states[-1] for kap in kap_list]
-    opLists = opListsBs2(GKP)
-    coin = np.random.random()
-    if coin < 0.25:
-        correction = 1.  # ---------- #
+    opList = opListsBs2(the_GKP)
+    corrections = [opList[0][0]*opList[1][0],opList[0][0]*opList[1][1],  # [Bgg, Bge
+                   opList[0][1]*opList[1][0],opList[0][1]*opList[1][1]]  # Beg, Bee]
+    correction_ix = get_correction_ix()  # get correction at random
+    correction = corrections[correction_ix]  # either Bgg,Bge,Beg or Bee
+    fidelities,probabilities = [],[]  # initializing lists
+    for e_state in e_states:
+        for N_round in N_rounds:
+            psi = e_state
+            for round in range(N_round):
+                psi = (correction*psi).unit()
+            fidelities.append(fidelity(psi,state))
+            # probabilities.append()  # ----- #
+    fid_arr,prob_arr = np.array(fidelities),np.array(probabilities)
+
+    # ***** plot *****
+    xvec,yvec = rate_list,N_rounds
+    fig,ax = plt.subplots()
+    if mode == 'fid':
+        cf = ax.contourf(xvec,yvec,np.reshape(fid_arr,(len(kap_list),len(N_rounds))).T,cmap="seismic")
+        fig.suptitle("Fidelity map")
+    elif mode == 'prob':
+        cf = ax.contourf(xvec,yvec,np.reshape(prob_arr,(len(kap_list),len(N_rounds))).T,cmap="seismic")
+        fig.suptitle("Probability map")
+    ax.legend()
+    fig.colorbar(cf,ax=ax)
+    if save:
+        plt.savefig(fig_save_path+fig_name)
+    if show:
+        plt.show()
     return

@@ -55,4 +55,4 @@ for i in range(9):
     axes[i%3,i//3].contourf(xvec, xvec, Wpsi, 100, norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
 plt.suptitle(r"$|0\rangle_{(2)}$",fontsize='xx-large')
 # plt.suptitle(r"$|0\rangle_{(2)}$ in basis $d=4,m=n=1$",fontsize='xx-large')
-plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/figs/Kraus_d=2,j=0")
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/various_tests/figs/Kraus_d=2,j=0")
