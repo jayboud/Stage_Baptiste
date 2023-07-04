@@ -174,13 +174,13 @@ def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,mode='fid',t_num=10,k
     opList = opListsBs2(the_GKP)
     corrections = [opList[0][0]*opList[1][0],opList[0][0]*opList[1][1],  # [Bgg, Bge
                    opList[0][1]*opList[1][0],opList[0][1]*opList[1][1]]  # Beg, Bee]
-    correction_ix = get_correction_ix()  # get correction at random
-    correction = corrections[correction_ix]  # either Bgg,Bge,Beg or Bee
     fidelities,probabilities = [],[]  # initializing lists
     for e_state in e_states:
         for N_round in N_rounds:
             psi = e_state
             for round in range(N_round):
+                correction_ix = get_correction_ix()  # get correction at random
+                correction = corrections[correction_ix]  # either Bgg,Bge,Beg or Bee
                 psi = (correction*psi).unit()
             fidelities.append(fidelity(psi,state))
             # probabilities.append()  # ----- #
