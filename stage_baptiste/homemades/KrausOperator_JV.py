@@ -196,7 +196,7 @@ def color_map(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,mode='fid',t_num=10,k
         cf = ax.pcolormesh(xvec,yvec,np.reshape(prob_arr,(len(kap_list),len(N_rounds))).T,cmap="seismic")
         fig.suptitle("Probability map")
     fig.colorbar(cf,ax=ax)
-    ax.set_xlabel(r"$\kappa t_{\text{gate}}$")
+    ax.set_xlabel(r"$\kappa t_{gate}$")
     ax.set_ylabel("N_rounds")
     if save:
         plt.savefig(fig_path+fig_name)

@@ -23,6 +23,6 @@ H = N_op**2
 tgate = pi/8
 max_error_rate = 2
 max_N_rounds = 10
-fig_name = f"first_cmap"
+fig_name = "cmap_4"
 fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/"
 color_map(GKP_obj, H, tgate, max_error_rate, max_N_rounds, fig_name=fig_name, fig_path=fig_path)
