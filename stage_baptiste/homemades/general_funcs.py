@@ -67,22 +67,6 @@ def plot_chi(chi_l):
     return
 
 
-def error_prob(error,state):
-    """
-    Function to calcultate the probability of an error to occur.
-    Args:
-        error: ndarray
-            The error matrix.
-        state: ndarray
-            The state vector.
-
-    Returns:
-        The probability that this error occurs.
-
-    """
-    return np.linalg.norm(error*state)**2
-
-
 def rot_wigner_clenshaw(rho, xvec, yvec, rot=0,g=np.sqrt(2), sparse=False):
     """
     Using Clenshaw summation - numerically stable and efficient

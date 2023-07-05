@@ -9,7 +9,7 @@ import numpy as np
 from scipy.constants import pi
 from qutip import *
 from stage_baptiste.homemades.finite_GKP import GKP
-from stage_baptiste.homemades.KrausOperator_JV import color_map
+from stage_baptiste.homemades.KrausOperator_JV import color_maps
 
 d = 2
 j = 0
@@ -21,8 +21,8 @@ N_op = a.dag()*a
 GKP_obj = GKP(d,j,delta,hilbert_dim)
 H = N_op**2
 tgate = pi/8
-max_error_rate = 2
-max_N_rounds = 20
-fig_name = "cmap_3"
+max_error_rate = 0.1
+max_N_rounds = 10
+fig_name = "cmap_4"
 fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/"
-color_map(GKP_obj, H, tgate, max_error_rate, max_N_rounds, fig_name=fig_name, fig_path=fig_path)
+color_maps(GKP_obj, H, tgate, max_error_rate, max_N_rounds, fig_name=fig_name, fig_path=fig_path)
