@@ -106,15 +106,14 @@ def get_correction(Klist,rho):
     elif np.sum(error_probs[:3]) <= coin < 1:
         correct_with = corrections[3]
     elif coin == 1:
-        get_correction()
+        get_correction(Klist,rho)
     return correct_with
 
 
-def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,
-              superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,fig_name=None,fig_path=None,
-              save=True,show=False):
+def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',superposition_state=None,
+               ss_d=None,ss_delta=None,ss_hilbert_dim=None,fig_name=None,fig_path=None,save=True,show=False):
     """
-    Function that calculates and plot a fidelity colormap and it's associated probability colormap of sBs error correction
+    Function that calculates and plot a fidelity colormap (and a probability colormap if mode=gg) of sBs error correction
     protocol applied to a qubit state evolving under photon loss error sqrt(kappa)*a . The x and y axis
     of the colormap are respectively the dimensionless error rate kappa*tgate (kappa is in tgate units)
     and the number of error correcting rounds.
@@ -138,6 +137,9 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             The number of samples to generate to compare error rates.
         N_rounds_steps: int
             The step between the number of error correcting rounds to compare.
+        mode: string ('random' or 'gg')
+            Decides wether or not you correct randomly or only with Bgg detection.
+            If only Bgg detection, a probability map will aslo be plotted.
         superposition_state: Qobj (ket)
             The initial state as a superposition of many GKP.states .
         ss_d: int (if superposition_state)
@@ -160,6 +162,9 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     the error rate on the x axis and the number of error correcting rounds on the y axis.
 
     """
+    # dealing with a simple GKP state or a superposition of states.
+    if mode not in ['random','gg']:
+        raise ValueError("You have to choose a mode between 'random' or 'gg'.")
     if superposition_state:
         if GKP_obj:
             raise ValueError("You have to choose between a normal GKP state or a superposition.")
@@ -180,6 +185,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         the_GKP = GKP_obj
         state = the_GKP.state
         dim = the_GKP.hilbert_dim
+    # setting all good parameters
     X = displace(dim, np.sqrt(pi/2))  # X gate for a qubit
     rho_init = state*state.dag()
     t_list = np.linspace(0, t_gate, t_num)
@@ -188,42 +194,61 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     rate_list = np.linspace(0,max_error_rate,kap_num)
     N_rounds = np.arange(0,max_N_rounds,N_rounds_steps)
     a = destroy(dim)
-    e_states = []
+    options = Options(nsteps=2000)
+    fid_rho = mesolve(-H, state, t_list, [], [], options=options).states[-1]  # reference state for fidelity (no c_ops)
+    norm_fid_rho = fid_rho/fid_rho.tr()  # normalized
+    print(f"fidelity state done.")
+    e_states = []  # with c_ops evolution
+    # evolving the state under photon loss error
     for count,kap in enumerate(kap_list):
-        options = Options(nsteps=2000)
         e_states.append(mesolve(-H,state,t_list,[np.sqrt(kap)*a],[],options=options).states[-1])
         print(f"e_states {count} done.")
     opList = opListsBs2(the_GKP)
     fidelities,probabilities = [],[]  # initializing lists
+    # correcting errors under sBs protocol
     for e_state in e_states:
         rho = e_state/e_state.tr()  # uncorrected state
         prob = 1  # probability of getting that state (neglecting randomness in c_op evolution if there is any) ***
         fidelities.append(fidelity(rho,rho_init))
         probabilities.append(prob)
         for round in range(max_N_rounds):
-            correction = get_correction(opList,rho)  # get correction at random according to probabilities
+            if mode == 'random':
+                correction = get_correction(opList,rho)  # get correction at random according to probabilities
+            elif mode == 'gg':
+                correction = opList[0][0] * opList[1][0]  # get Bgg correction each time
             rho_prime = correction*rho*correction.dag()
             prob_prime = rho_prime.tr()
             rho = rho_prime/prob_prime
             prob *= prob_prime
-            fidelities.append(fidelity(rho,state))
+            if (round+1) % 2:
+                rot_rho = X*rho*X.dag()
+                fidelities.append(fidelity(rot_rho,norm_fid_rho))
+            else:
+                fidelities.append(fidelity(rho,norm_fid_rho))
             probabilities.append(prob)
-
-    fid_arr,prob_arr = np.array(fidelities),np.array(probabilities)
-
-    # ***** plot *****
+    fid_arr,prob_arr = np.real(np.array(fidelities)),np.real(np.array(probabilities))
+    # ploting colormaps
     xvec,yvec = rate_list,np.append(N_rounds,max_N_rounds)
-    fig,axs = plt.subplots(1,2,figsize=(10,4))
-    cff = axs[0].pcolormesh(xvec,yvec,np.reshape(fid_arr,(len(xvec),len(yvec))).T,cmap="seismic")
-    fig.colorbar(cff, ax=axs[0])
-    cfp = axs[1].pcolormesh(xvec, yvec, np.reshape(prob_arr, (len(xvec), len(yvec))).T, cmap="seismic")
-    fig.colorbar(cff, ax=axs[1])
-    axs[0].set_title("Fidelity map")
-    axs[1].set_title("Probability map")
-    axs[0].set_xlabel(r"$\kappa t_{gate}$")
-    axs[1].set_xlabel(r"$\kappa t_{gate}$")
-    axs[0].set_ylabel("N_rounds")
-    axs[1].sharey=axs[0]
+    fid = np.reshape(fid_arr, (len(xvec), len(yvec))).T
+    pro = np.reshape(prob_arr, (len(xvec), len(yvec))).T
+    if mode == 'random':
+        fig, ax = plt.subplots(figsize=(10, 8))
+        cff = ax.pcolormesh(xvec, yvec, fid,norm=mpl.colors.Normalize(0,1),cmap="seismic")
+        fig.colorbar(cff, ax=ax)
+        ax.set_title("Fidelity map")
+        ax.set_xlabel(r"$\kappa t_{gate}$")
+        ax.set_ylabel("N_rounds")
+    if mode == 'gg':
+        fig, axs = plt.subplots(1, 2, figsize=(10, 4))
+        cff = axs[0].pcolormesh(xvec,yvec,fid,norm=mpl.colors.Normalize(0,1),cmap="seismic")
+        cfp = axs[1].pcolormesh(xvec, yvec, pro,norm=mpl.colors.Normalize(0,1),cmap="seismic")
+        fig.colorbar(cfp, ax=axs[1])
+        axs[0].set_title("Fidelity map")
+        axs[1].set_title("Probability map")
+        axs[0].set_xlabel(r"$\kappa t_{gate}$")
+        axs[1].set_xlabel(r"$\kappa t_{gate}$")
+        axs[0].set_ylabel("N_rounds")
+        axs[1].sharey=axs[0]
     if save:
         plt.savefig(fig_path+fig_name)
     if show:

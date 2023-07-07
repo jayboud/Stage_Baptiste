@@ -21,8 +21,8 @@ N_op = a.dag()*a
 GKP_obj = GKP(d,j,delta,hilbert_dim)
 H = N_op**2
 tgate = pi/8
-max_error_rate = 0.1
-max_N_rounds = 10
-fig_name = "cmap_4"
+max_error_rate = 0.10
+max_N_rounds = 100
+fig_name = "gg_cmap"
 fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/"
-color_maps(GKP_obj, H, tgate, max_error_rate, max_N_rounds, fig_name=fig_name, fig_path=fig_path)
+color_maps(GKP_obj, H, tgate, max_error_rate, max_N_rounds, kap_num=10, mode='gg',fig_name=fig_name, fig_path=fig_path)
