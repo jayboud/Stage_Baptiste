@@ -21,11 +21,12 @@ from matplotlib.animation import FuncAnimation
 
 delta = 0.25
 dim = 100
-osc = GKP(2,0,delta,dim).state  # gkp with delta = 0
-# fig, ax = plot_wigner(osc,method='laguerre')
-# ax.text(-6,6,rf"$\Delta = {delta}$")
-# ax.text(-6,5,rf"$N = {dim}$")
-# plt.savefig(f"Wigner_test_for_finite_GKP/figs/Wigner_{dim}")
+osc = GKP(2,1,delta,dim).state  # gkp with delta = 0.25
+fig, ax = plot_wigner(osc,method='laguerre')
+ax.text(-6,6,rf"$\Delta = {delta}$")
+ax.text(-6,5,rf"$N = {dim}$")
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/Wigner_{dim}_1")
+print(fidelity(GKP(2,0,delta,dim).state,GKP(2,1,delta,dim).state))
 
 
 # Hadamar gate (e^{i pi/4 a.dag a})
@@ -161,11 +162,11 @@ H = a.dag()*a
 
 
 # chi function
-j = 0
-delta = 0.25
-dim = 75
-qubit = GKP(2,j,delta,dim)
-rho = qubit.state*qubit.state.dag()
-chi_l = chi_function(rho,7.5)
-plot_chi(chi_l)
-plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/chi_qubit_j={j}")
+# j = 0
+# delta = 0.25
+# dim = 75
+# qubit = GKP(2,j,delta,dim)
+# rho = qubit.state*qubit.state.dag()
+# chi_l = chi_function(rho,7.5)
+# plot_chi(chi_l)
+# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/chi_qubit_j={j}")

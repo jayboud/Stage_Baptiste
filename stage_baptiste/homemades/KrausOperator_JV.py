@@ -186,7 +186,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         state = the_GKP.state
         dim = the_GKP.hilbert_dim
     # setting all good parameters
-    X = displace(dim, np.sqrt(pi/2))  # X gate for a qubit
+    Y = displace(dim, np.sqrt(pi/2)*(1+1j))  # X gate for a qubit
     rho_init = state*state.dag()
     t_list = np.linspace(0, t_gate, t_num)
     kap_max = max_error_rate/t_gate
@@ -196,12 +196,13 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     a = destroy(dim)
     options = Options(nsteps=2000)
     fid_rho = mesolve(-H, state, t_list, [], [], options=options).states[-1]  # reference state for fidelity (no c_ops)
-    norm_fid_rho = fid_rho/fid_rho.tr()  # normalized
+    norm_fid_rho = fid_rho
     print(f"fidelity state done.")
     e_states = []  # with c_ops evolution
     # evolving the state under photon loss error
     for count,kap in enumerate(kap_list):
         e_states.append(mesolve(-H,state,t_list,[np.sqrt(kap)*a],[],options=options).states[-1])
+        print(f"fidelity {fidelity(norm_fid_rho,e_states[-1])}")
         print(f"e_states {count} done.")
     opList = opListsBs2(the_GKP)
     fidelities,probabilities = [],[]  # initializing lists
@@ -209,7 +210,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     for e_state in e_states:
         rho = e_state/e_state.tr()  # uncorrected state
         prob = 1  # probability of getting that state (neglecting randomness in c_op evolution if there is any) ***
-        fidelities.append(fidelity(rho,rho_init))
+        fidelities.append(fidelity(rho,norm_fid_rho))
         probabilities.append(prob)
         for round in range(max_N_rounds):
             if mode == 'random':
@@ -221,7 +222,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             rho = rho_prime/prob_prime
             prob *= prob_prime
             if (round+1) % 2:
-                rot_rho = X*rho*X.dag()
+                rot_rho = Y*rho*Y.dag()
                 fidelities.append(fidelity(rot_rho,norm_fid_rho))
             else:
                 fidelities.append(fidelity(rho,norm_fid_rho))
