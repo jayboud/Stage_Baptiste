@@ -137,7 +137,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             The number of samples to generate to compare error rates.
         N_rounds_steps: int
             The step between the number of error correcting rounds to compare.
-        mode: string ('random' or 'gg')
+        mode: string ('random' or 'gg' or 'avg')
             Decides wether or not you correct randomly or only with Bgg detection.
             If only Bgg detection, a probability map will aslo be plotted.
         superposition_state: Qobj (ket)
@@ -163,8 +163,8 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
 
     """
     # dealing with a simple GKP state or a superposition of states.
-    if mode not in ['random','gg']:
-        raise ValueError("You have to choose a mode between 'random' or 'gg'.")
+    if mode not in ['random','gg','avg']:
+        raise ValueError("You have to choose a mode between 'random' or 'gg' or 'avg.")
     if superposition_state:
         if GKP_obj:
             raise ValueError("You have to choose between a normal GKP state or a superposition.")
@@ -187,7 +187,6 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         dim = the_GKP.hilbert_dim
     # setting all good parameters
     Y = displace(dim, np.sqrt(pi/2)*(1+1j))  # X gate for a qubit
-    rho_init = state*state.dag()
     t_list = np.linspace(0, t_gate, t_num)
     kap_max = max_error_rate/t_gate
     kap_list = np.linspace(0,kap_max,kap_num)
@@ -255,3 +254,16 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     if show:
         plt.show()
     return
+
+
+# faire des moyennes des randoms
+
+# *** notion de trajectoire = une mesure d'un phénomène probabiliste
+# donc plusieurs trajectoires permettent de calculer une moyenne ***
+
+# faire la moyenne des randoms simplement en additionnant les quatres outcomes possibles
+
+# faire le circuit sBs analytiquement
+
+# voir pourquoi ça devient pas plus pâle
+

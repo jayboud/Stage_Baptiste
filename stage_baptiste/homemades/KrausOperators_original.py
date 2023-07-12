@@ -70,6 +70,7 @@ psi = basis(Ncav)  # Test by starting from vacuum, always measuring g
 fig, axes = plt.subplots(3, 3, figsize=(12,12))
 for i in range(9):
     psi = (Kgg*psi).unit()  # Important to normalize the state as this is not a unitary evolution
+    print(f"fidelity {fidelity(psi,basis(Ncav))}")
     Wpsi = wigner(psi, xvec, xvec)
     wlim = abs(Wpsi).max()
     axes[i%3,i//3].contourf(xvec, xvec, Wpsi, 100, norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
