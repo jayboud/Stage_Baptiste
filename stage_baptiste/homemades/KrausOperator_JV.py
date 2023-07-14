@@ -78,13 +78,13 @@ def error_prob(error,rho):
     return (error*rho*error.dag()).tr()
 
 
-def get_correction(Klist,rho):
+def get_correction(corrections,rho):
     """
     Function that randomly picks an
     index for a list of corrections of len=4.
     Args:
         Klist: list of Qobj
-            Operators used to apply sBs error correction.
+            List of operators used to apply sBs error correction.
         rho: Qobj (operator)
             The density matrix to correct.
 
@@ -92,8 +92,6 @@ def get_correction(Klist,rho):
         The index.
 
     """
-    corrections = [Klist[0][0] * Klist[1][0], Klist[0][0] * Klist[1][1],  # [Bgg, Bge
-                   Klist[0][1] * Klist[1][0], Klist[0][1] * Klist[1][1]]  # Beg, Bee]
     error_probs = np.array([error_prob(correction,rho) for correction in corrections])
     error_probs /= np.sum(error_probs)  # normalizing probabilities
     coin = np.random.random()
@@ -106,12 +104,13 @@ def get_correction(Klist,rho):
     elif np.sum(error_probs[:3]) <= coin < 1:
         correct_with = corrections[3]
     elif coin == 1:
-        get_correction(Klist,rho)
+        get_correction(corrections,rho)
     return correct_with
 
 
-def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',superposition_state=None,
-               ss_d=None,ss_delta=None,ss_hilbert_dim=None,fig_name=None,fig_path=None,save=True,show=False):
+def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',
+               superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,traces=False,traces_ix=[[],[]],
+               fig_name=None,traces_fig_name=None,fig_path=None,save=True,show=False):
     """
     Function that calculates and plot a fidelity colormap (and a probability colormap if mode=gg) of sBs error correction
     protocol applied to a qubit state evolving under photon loss error sqrt(kappa)*a . The x and y axis
@@ -140,6 +139,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         mode: string ('random' or 'gg' or 'avg')
             Decides wether or not you correct randomly or only with Bgg detection.
             If only Bgg detection, a probability map will aslo be plotted.
+            'Avg' traces the average fidelity map of all corrections weighted by their probability.
         superposition_state: Qobj (ket)
             The initial state as a superposition of many GKP.states .
         ss_d: int (if superposition_state)
@@ -149,8 +149,15 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             The enveloppe on the finite stats of the superposition.
         ss_hilbert_dim: int (if superposition_state)
             The hilbert dimension in Fock space of states in the superposition state.
+        traces: bool
+            Plotting a horizontal (vertical) trace of fidelity for a fixed
+            number of error correcting rounds (fixed error rate).
+        traces_ix: list of lists of ints [[rounds_ix],[error_rate_ix]]
+            The list of index of rounds and error rates to plot traces of.
         fig_name: string
             The name under which to save the figure.
+        traces_fig_name: string
+            The name under which to save traces figure.
         fig_path: string
             The path and the name of the saved colormap.
         save: bool
@@ -204,6 +211,8 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         print(f"fidelity {fidelity(norm_fid_rho,e_states[-1])}")
         print(f"e_states {count} done.")
     opList = opListsBs2(the_GKP)
+    corrections = [opList[0][0] * opList[1][0], opList[0][0] * opList[1][1],  # [Bgg, Bge
+                   opList[0][1] * opList[1][0], opList[0][1] * opList[1][1]]  # Beg, Bee]
     fidelities,probabilities = [],[]  # initializing lists
     # correcting errors under sBs protocol
     for e_state in e_states:
@@ -211,16 +220,19 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         prob = 1  # probability of getting that state (neglecting randomness in c_op evolution if there is any) ***
         fidelities.append(fidelity(rho,norm_fid_rho))
         probabilities.append(prob)
-        for round in range(max_N_rounds):
+        for n_round in range(max_N_rounds):
             if mode == 'random':
-                correction = get_correction(opList,rho)  # get correction at random according to probabilities
+                correction = get_correction(corrections,rho)  # get correction at random according to probabilities
+                rho_prime = correction*rho*correction.dag()
             elif mode == 'gg':
-                correction = opList[0][0] * opList[1][0]  # get Bgg correction each time
-            rho_prime = correction*rho*correction.dag()
+                correction = opList[0][0]*opList[1][0]  # get Bgg correction each time
+                rho_prime = correction*rho*correction.dag()
+            elif mode == 'avg':
+                rho_prime = sum([correction*rho*correction.dag() for correction in corrections])
             prob_prime = rho_prime.tr()
             rho = rho_prime/prob_prime
             prob *= prob_prime
-            if (round+1) % 2:
+            if (n_round+1) % 2:
                 rot_rho = Y*rho*Y.dag()
                 fidelities.append(fidelity(rot_rho,norm_fid_rho))
             else:
@@ -230,15 +242,16 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     # ploting colormaps
     xvec,yvec = rate_list,np.append(N_rounds,max_N_rounds)
     fid = np.reshape(fid_arr, (len(xvec), len(yvec))).T
+    print(shape(fid))
     pro = np.reshape(prob_arr, (len(xvec), len(yvec))).T
-    if mode == 'random':
+    if mode in ['random','avg']:
         fig, ax = plt.subplots(figsize=(10, 8))
         cff = ax.pcolormesh(xvec, yvec, fid,norm=mpl.colors.Normalize(0,1),cmap="seismic")
         fig.colorbar(cff, ax=ax)
         ax.set_title("Fidelity map")
         ax.set_xlabel(r"$\kappa t_{gate}$")
         ax.set_ylabel("N_rounds")
-    if mode == 'gg':
+    elif mode == 'gg':
         fig, axs = plt.subplots(1, 2, figsize=(10, 4))
         cff = axs[0].pcolormesh(xvec,yvec,fid,norm=mpl.colors.Normalize(0,1),cmap="seismic")
         cfp = axs[1].pcolormesh(xvec, yvec, pro,norm=mpl.colors.Normalize(0,1),cmap="seismic")
@@ -253,6 +266,57 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         plt.savefig(fig_path+fig_name)
     if show:
         plt.show()
+    plt.clf()
+    # horizontal and vertical traces
+    if traces:
+        if not isinstance(traces_ix[0],list):
+            traces_ix = [traces_ix,[]]
+        horizontals = np.array(fid[traces_ix[0],:])
+        if traces_ix[1]:
+            verticals = np.array(fid[:, traces_ix[1]])
+        if not traces_ix[0] and not traces_ix[1]:
+            raise ValueError("You have to choose some indexes to plot in"
+                             "traces_ix = [[n_rounds_ixs],[error_rates_ixs]]. "
+                             "Providing one list will be assumed to be n_rounds_idx.")
+        elif traces_ix[0] and traces_ix[1]:
+            fig,axs = plt.subplots(1,2, figsize=(10,4))
+            h_traces = axs[0].plot(xvec,horizontals.T)
+            v_traces = axs[1].plot(yvec,verticals)
+            for h_trace,h_ix in zip(h_traces,traces_ix[0]):
+                h_trace.set(label=f"N rounds = {h_ix}")
+            for v_trace,v_ix in zip(v_traces,traces_ix[1]):
+                v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
+            axs[0].set_title("Horizontal traces")
+            axs[1].set_title("Vertical traces")
+            axs[0].set_xlabel(r"$\kappa t_{gate}$")
+            axs[1].set_xlabel("N_rounds")
+            axs[0].set_ylabel(r"$F$",rotation=0)
+            axs[0].set_ylim(0,1)
+            axs[1].sharey = axs[0]
+            for ax in axs:
+                ax.legend()
+        else:
+            fig, ax = plt.subplots(figsize=(10, 8))
+            if traces_ix[0]:
+                h_traces = ax.plot(xvec, horizontals.T)
+                for h_trace, h_ix in zip(h_traces, traces_ix[0]):
+                    h_trace.set(label=f"N rounds = {h_ix}")
+                ax.set_title("Horizontal traces")
+                ax.set_xlabel(r"$\kappa t_{gate}$")
+            if traces_ix[1]:
+                v_traces = ax.plot(yvec, verticals)
+                for v_trace, v_ix in zip(v_traces, traces_ix[1]):
+                    v_trace.set(label=r"$\kappa t_{gate} = $" + f"{round(xvec[v_ix], 3)}")
+                ax.set_title("Vertical traces")
+                ax.set_xlabel("N_rounds")
+            ax.set_ylabel(r"$F$",rotation=0)
+            ax.set_ylim(0, 1)
+        plt.legend()
+        if save:
+            plt.savefig(fig_path + traces_fig_name)
+        if show:
+            plt.show()
+
     return
 
 
