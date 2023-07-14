@@ -129,3 +129,6 @@ def DFT_matrix(N):
     omega = np.exp(2*pi*1j/N)
     W = np.power(omega, i*j) / np.sqrt(N)
     return W
+
+
+

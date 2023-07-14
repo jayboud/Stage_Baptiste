@@ -13,6 +13,7 @@ import tqdm
 import math
 from qutip import *
 from scipy.constants import pi
+from scipy.optimize import curve_fit
 from stage_baptiste.homemades.finite_GKP import GKP
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -106,6 +107,19 @@ def get_correction(corrections,rho):
     elif coin == 1:
         get_correction(corrections,rho)
     return correct_with
+
+
+def mapping_fidelity(A,B):
+    """
+
+    Args:
+        A:
+        B:
+
+    Returns:
+
+    """
+    return
 
 
 def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',
@@ -279,11 +293,20 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
                              "traces_ix = [[n_rounds_ixs],[error_rates_ixs]]. "
                              "Providing one list will be assumed to be n_rounds_idx.")
         elif traces_ix[0] and traces_ix[1]:
+            def parabolic(x, a, b, h):
+                return a*(x-h)**2 + b
+            def linear(x, a, b):
+                return a*x + b
             fig,axs = plt.subplots(1,2, figsize=(10,4))
             h_traces = axs[0].plot(xvec,horizontals.T)
             v_traces = axs[1].plot(yvec,verticals)
             for h_trace,h_ix in zip(h_traces,traces_ix[0]):
-                h_trace.set(label=f"N rounds = {h_ix}")
+                x_data,y_data = h_trace.get_data()[0],h_trace.get_data()[1]
+                popt,pcov = curve_fit(linear,x_data,y_data)
+                x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
+                y_fit = linear(x_fit,*popt)
+                axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}$",ls="dotted",color=h_trace.get_color())
+                axs[0].text(0.05,0.52,r"$F = \alpha (x-h)^2 + \beta$")
             for v_trace,v_ix in zip(v_traces,traces_ix[1]):
                 v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
             axs[0].set_title("Horizontal traces")
@@ -294,7 +317,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             # axs[0].set_ylim(0,1)
             axs[1].sharey = axs[0]
             for ax in axs:
-                ax.legend()
+                ax.legend(loc="upper right")
         else:
             fig, ax = plt.subplots(figsize=(10, 8))
             if traces_ix[0]:
