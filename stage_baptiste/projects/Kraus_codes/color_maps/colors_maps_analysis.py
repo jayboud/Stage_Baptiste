@@ -21,10 +21,10 @@ N_op = a.dag()*a
 GKP_obj = GKP(d,j,delta,hilbert_dim)
 H = N_op**2
 tgate = pi/8
-max_error_rate = 0.20
+max_error_rate = 6
 max_N_rounds = 30
-fig_name = "sqrtH_gg_cmap_ht2"
+fig_name = "big_sqrtH_gg_cmap"
 tr_fig_name = "traces"
 fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/"
-color_maps(GKP_obj, H, tgate, max_error_rate, max_N_rounds, kap_num=10, mode='gg',
-           traces=True,traces_ix=[[0,2,4,6,8],[0,2,4,6,8]],fig_name=fig_name,traces_fig_name=tr_fig_name,fig_path=fig_path)
+color_maps(GKP_obj, H, tgate, max_error_rate, max_N_rounds, kap_num=30, mode='gg',
+           traces=True,traces_ix=[[2,4,6,8],[2,4,6,8]],fig_name=fig_name,traces_fig_name=tr_fig_name,fig_path=fig_path,show=True)

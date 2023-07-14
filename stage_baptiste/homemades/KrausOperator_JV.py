@@ -291,7 +291,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             axs[0].set_xlabel(r"$\kappa t_{gate}$")
             axs[1].set_xlabel("N_rounds")
             axs[0].set_ylabel(r"$F$",rotation=0)
-            axs[0].set_ylim(0,1)
+            # axs[0].set_ylim(0,1)
             axs[1].sharey = axs[0]
             for ax in axs:
                 ax.legend()
@@ -310,7 +310,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
                 ax.set_title("Vertical traces")
                 ax.set_xlabel("N_rounds")
             ax.set_ylabel(r"$F$",rotation=0)
-            ax.set_ylim(0, 1)
+            # ax.set_ylim(0, 1)
         plt.legend()
         if save:
             plt.savefig(fig_path + traces_fig_name)
