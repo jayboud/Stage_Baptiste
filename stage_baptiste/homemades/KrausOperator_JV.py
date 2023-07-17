@@ -109,22 +109,34 @@ def get_correction(corrections,rho):
     return correct_with
 
 
-def mapping_fidelity(A,B):
+def qb_mapping_fidelity(rho,rho_ref):
     """
-
+    Function that calculates fidelity according to
+    a qubit mapping. (See mapping notes.pdf)
     Args:
-        A:
-        B:
+        rho: Qobj (density matrix)
+            The GKP state to map
+        rho_ref: Qobj (ket)
+            The qubit density matrix to reference fidelity.
 
     Returns:
+        fidelity: (float)
+            The fidelity according to the mapping.
 
     """
-    return
+    dim = rho.shape[0]
+    Ds = np.sqrt(pi/2), np.sqrt(pi/2)*(1+1j), np.sqrt(pi/2)*1j
+    X,Y,Z = [displace(dim, gamma) for gamma in Ds]  # X,Z,Y
+    r = np.array([(op*rho).tr() for op in [X,Y,Z]])
+    sigs = np.array([sigmax(),sigmay(),sigmaz()])
+    rho_qubit = (qeye(2) + r*sigs)/2
+    fid = fidelity(rho_qubit,rho_ref)
+    return fid
 
 
 def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',
-               superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,traces=False,traces_ix=[[],[]],
-               fig_name=None,traces_fig_name=None,fig_path=None,save=True,show=False):
+               qubit_mapping=False,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,traces=False,
+               traces_ix=[[],[]],fig_name=None,traces_fig_name=None,fig_path=None,save=True,show=False):
     """
     Function that calculates and plot a fidelity colormap (and a probability colormap if mode=gg) of sBs error correction
     protocol applied to a qubit state evolving under photon loss error sqrt(kappa)*a . The x and y axis
@@ -154,6 +166,9 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             Decides wether or not you correct randomly or only with Bgg detection.
             If only Bgg detection, a probability map will aslo be plotted.
             'Avg' traces the average fidelity map of all corrections weighted by their probability.
+        qubit_mapping: bool
+            Decides wether or not to use qubit mapping
+            to calculate fidelity. (see mapping notes.pdf)
         superposition_state: Qobj (ket)
             The initial state as a superposition of many GKP.states .
         ss_d: int (if superposition_state)
@@ -183,9 +198,9 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     the error rate on the x axis and the number of error correcting rounds on the y axis.
 
     """
-    # dealing with a simple GKP state or a superposition of states.
     if mode not in ['random','gg','avg']:
         raise ValueError("You have to choose a mode between 'random' or 'gg' or 'avg.")
+    # dealing with a simple GKP state or a superposition of states.
     if superposition_state:
         if GKP_obj:
             raise ValueError("You have to choose between a normal GKP state or a superposition.")
@@ -216,13 +231,12 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     a = destroy(dim)
     options = Options(nsteps=2000)
     fid_rho = mesolve(-H, state, t_list, [], [], options=options).states[-1]  # reference state for fidelity (no c_ops)
-    norm_fid_rho = fid_rho
     print(f"fidelity state done.")
     e_states = []  # with c_ops evolution
     # evolving the state under photon loss error
     for count,kap in enumerate(kap_list):
         e_states.append(mesolve(-H,state,t_list,[np.sqrt(kap)*a],[],options=options).states[-1])
-        print(f"fidelity {fidelity(norm_fid_rho,e_states[-1])}")
+        print(f"fidelity {fidelity(fid_rho,e_states[-1])}")
         print(f"e_states {count} done.")
     opList = opListsBs2(the_GKP)
     corrections = [opList[0][0] * opList[1][0], opList[0][0] * opList[1][1],  # [Bgg, Bge
@@ -232,7 +246,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     for e_state in e_states:
         rho = e_state/e_state.tr()  # uncorrected state
         prob = 1  # probability of getting that state (neglecting randomness in c_op evolution if there is any) ***
-        fidelities.append(fidelity(rho,norm_fid_rho))
+        fidelities.append(fidelity(rho,fid_rho))
         probabilities.append(prob)
         for n_round in range(max_N_rounds):
             if mode == 'random':
@@ -248,15 +262,20 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             prob *= prob_prime
             if (n_round+1) % 2:
                 rot_rho = Y*rho*Y.dag()
-                fidelities.append(fidelity(rot_rho,norm_fid_rho))
+                if qubit_mapping:
+                    fidelities.append(qb_mapping_fidelity(rho,fid_rho))
+                else:
+                    fidelities.append(fidelity(rot_rho, fid_rho))
             else:
-                fidelities.append(fidelity(rho,norm_fid_rho))
+                if qubit_mapping:
+                    fidelities.append(qb_mapping_fidelity(rho, fid_rho))
+                else:
+                    fidelities.append(fidelity(rho,fid_rho))
             probabilities.append(prob)
     fid_arr,prob_arr = np.real(np.array(fidelities)),np.real(np.array(probabilities))
     # ploting colormaps
     xvec,yvec = rate_list,np.append(N_rounds,max_N_rounds)
     fid = np.reshape(fid_arr, (len(xvec), len(yvec))).T
-    print(shape(fid))
     pro = np.reshape(prob_arr, (len(xvec), len(yvec))).T
     if mode in ['random','avg']:
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -293,8 +312,8 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
                              "traces_ix = [[n_rounds_ixs],[error_rates_ixs]]. "
                              "Providing one list will be assumed to be n_rounds_idx.")
         elif traces_ix[0] and traces_ix[1]:
-            def parabolic(x, a, b, h):
-                return a*(x-h)**2 + b
+            def parabolic(x, a, b, c):
+                return a*x**2 + b*x +c
             def linear(x, a, b):
                 return a*x + b
             fig,axs = plt.subplots(1,2, figsize=(10,4))
@@ -302,11 +321,11 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             v_traces = axs[1].plot(yvec,verticals)
             for h_trace,h_ix in zip(h_traces,traces_ix[0]):
                 x_data,y_data = h_trace.get_data()[0],h_trace.get_data()[1]
-                popt,pcov = curve_fit(linear,x_data,y_data)
+                popt,pcov = curve_fit(parabolic,x_data,y_data)
                 x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
-                y_fit = linear(x_fit,*popt)
-                axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}$",ls="dotted",color=h_trace.get_color())
-                axs[0].text(0.05,0.52,r"$F = \alpha (x-h)^2 + \beta$")
+                y_fit = parabolic(x_fit,*popt)
+                axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}, \gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
+                axs[0].text(0.05,0.52,r"$F = \alpha x^2 + \beta x + \gamma$")
             for v_trace,v_ix in zip(v_traces,traces_ix[1]):
                 v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
             axs[0].set_title("Horizontal traces")
@@ -341,16 +360,3 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             plt.show()
 
     return
-
-
-# faire des moyennes des randoms
-
-# *** notion de trajectoire = une mesure d'un phénomène probabiliste
-# donc plusieurs trajectoires permettent de calculer une moyenne ***
-
-# faire la moyenne des randoms simplement en additionnant les quatres outcomes possibles
-
-# faire le circuit sBs analytiquement
-
-# voir pourquoi ça devient pas plus pâle
-
