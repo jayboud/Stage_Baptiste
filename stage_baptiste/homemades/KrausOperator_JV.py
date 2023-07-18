@@ -109,7 +109,7 @@ def get_correction(corrections,rho):
     return correct_with
 
 
-def qb_mapping_fidelity(state,state_ref,other):
+def qb_mapping_fidelity(state,state_ref,basic_qubit_ref):
     """
     Function that calculates fidelity according to
     a qubit mapping. (See mapping notes.pdf)
@@ -117,7 +117,9 @@ def qb_mapping_fidelity(state,state_ref,other):
         state: Qobj (density matrix)
             The GKP state to map
         state_ref: Qobj (ket)
-            The qubit density matrix to reference fidelity.
+            The reference GKP state to map
+        basic_qubit_ref:
+            The basic qubit density matrix to reference fidelity (no mapping involved).
 
     Returns:
         fidelity: (float)
@@ -129,27 +131,28 @@ def qb_mapping_fidelity(state,state_ref,other):
     X,Y,Z = [displace(dim, gamma) for gamma in Ds]  # X,Z,Y
     r_qubit,r_ref = [np.array([(op*st).tr() for op in [X,Y,Z]]) for st in [state,state_ref]]
     sigs = np.array([sigmax(),sigmay(),sigmaz()])
-    rho_qubit,rho_qubit_ref = [(qeye(2) + Qobj(sum(r[:,None,None]*sigs)))/2 for r in [r_qubit,r_ref]]
-    fid = fidelity(rho_qubit,rho_qubit_ref)
+    mapped_qubit,mapped_qubit_ref = [(qeye(2) + Qobj(sum(r[:,None,None]*sigs)))/2 for r in [r_qubit,r_ref]]
+    fid = fidelity(mapped_qubit,mapped_qubit_ref)
     return fid
 
 
-def get_fidelities(A,B,other):
+def get_fidelities(A,B,basic_qubit_ref):
     """
     Function that get normal and qubit mapping fidelities.
     Args:
         A: Qobj (matrix)
         B: Qobj (matrix)
+        basic_qubit_ref: Qobj (matrix)
 
     Returns:
         The fidelities.
 
     """
-    return [fidelity(A,B),qb_mapping_fidelity(A,B,other)]
+    return [fidelity(A,B),qb_mapping_fidelity(A,B,basic_qubit_ref)]
 
 
 def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',
-               qubit_mapping=False,qms=None,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,traces=False,
+               qubit_mapping=False,bqr=None,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,traces=False,
                traces_ix=[[],[]],fig_name=None,traces_fig_name=None,fig_path=None,save=True,show=False):
     """
     Function that calculates and plot a fidelity colormap (and a probability colormap if mode=gg) of sBs error correction
@@ -183,8 +186,8 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         qubit_mapping: bool
             Decides wether or not to use qubit mapping
             to calculate fidelity. (see mapping notes.pdf)
-        qms: Qobj (matrix)
-            The reference qubit mapping state for the fidelity.
+        bqr: Qobj (matrix)
+            The basic qubit reference state for the fidelity of mapped qubits.
         superposition_state: Qobj (ket)
             The initial state as a superposition of many GKP.states .
         ss_d: int (if superposition_state)
@@ -216,10 +219,10 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     """
     if mode not in ['random','gg','avg']:
         raise ValueError("You have to choose a mode between 'random' or 'gg' or 'avg.")
-    # if qubit_mapping:
-    #     if not isinstance(qms,Qobj):
-    #         raise ValueError("You have to define a valid reference qubit mapping state"
-    #                          "with kwarg 'qms' to be able to calculate the fidelity.")
+    if qubit_mapping:
+        if not isinstance(bqr,Qobj):
+            raise ValueError("You have to define a valid basic qubit reference state to calculate"
+                             "the fidelity of mapped qubits with kwarg 'bqr'.")
     # dealing with a simple GKP state or a superposition of states.
     if superposition_state:
         if GKP_obj:
@@ -282,9 +285,9 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             prob *= prob_prime
             if (n_round+1) % 2:
                 rot_rho = Y*rho*Y.dag()
-                fidelities.append(get_fidelities(rot_rho,fid_rho,qms)[qubit_mapping])
+                fidelities.append(get_fidelities(rot_rho,fid_rho,bqr)[qubit_mapping])
             else:
-                fidelities.append(get_fidelities(rho, fid_rho,qms)[qubit_mapping])
+                fidelities.append(get_fidelities(rho, fid_rho,bqr)[qubit_mapping])
             probabilities.append(prob)
     fid_arr,prob_arr = np.real(np.array(fidelities)),np.real(np.array(probabilities))
     # ploting colormaps
