@@ -109,14 +109,14 @@ def get_correction(corrections,rho):
     return correct_with
 
 
-def qb_mapping_fidelity(rho,rho_ref):
+def qb_mapping_fidelity(state,state_ref,other):
     """
     Function that calculates fidelity according to
     a qubit mapping. (See mapping notes.pdf)
     Args:
-        rho: Qobj (density matrix)
+        state: Qobj (density matrix)
             The GKP state to map
-        rho_ref: Qobj (ket)
+        state_ref: Qobj (ket)
             The qubit density matrix to reference fidelity.
 
     Returns:
@@ -124,18 +124,32 @@ def qb_mapping_fidelity(rho,rho_ref):
             The fidelity according to the mapping.
 
     """
-    dim = rho.shape[0]
+    dim = state.shape[0]
     Ds = np.sqrt(pi/2), np.sqrt(pi/2)*(1+1j), np.sqrt(pi/2)*1j
     X,Y,Z = [displace(dim, gamma) for gamma in Ds]  # X,Z,Y
-    r = np.array([(op*rho).tr() for op in [X,Y,Z]])
+    r_qubit,r_ref = [np.array([(op*st).tr() for op in [X,Y,Z]]) for st in [state,state_ref]]
     sigs = np.array([sigmax(),sigmay(),sigmaz()])
-    rho_qubit = (qeye(2) + r*sigs)/2
-    fid = fidelity(rho_qubit,rho_ref)
+    rho_qubit,rho_qubit_ref = [(qeye(2) + Qobj(sum(r[:,None,None]*sigs)))/2 for r in [r_qubit,r_ref]]
+    fid = fidelity(rho_qubit,rho_qubit_ref)
     return fid
 
 
+def get_fidelities(A,B,other):
+    """
+    Function that get normal and qubit mapping fidelities.
+    Args:
+        A: Qobj (matrix)
+        B: Qobj (matrix)
+
+    Returns:
+        The fidelities.
+
+    """
+    return [fidelity(A,B),qb_mapping_fidelity(A,B,other)]
+
+
 def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',
-               qubit_mapping=False,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,traces=False,
+               qubit_mapping=False,qms=None,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,traces=False,
                traces_ix=[[],[]],fig_name=None,traces_fig_name=None,fig_path=None,save=True,show=False):
     """
     Function that calculates and plot a fidelity colormap (and a probability colormap if mode=gg) of sBs error correction
@@ -169,6 +183,8 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         qubit_mapping: bool
             Decides wether or not to use qubit mapping
             to calculate fidelity. (see mapping notes.pdf)
+        qms: Qobj (matrix)
+            The reference qubit mapping state for the fidelity.
         superposition_state: Qobj (ket)
             The initial state as a superposition of many GKP.states .
         ss_d: int (if superposition_state)
@@ -200,6 +216,10 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     """
     if mode not in ['random','gg','avg']:
         raise ValueError("You have to choose a mode between 'random' or 'gg' or 'avg.")
+    # if qubit_mapping:
+    #     if not isinstance(qms,Qobj):
+    #         raise ValueError("You have to define a valid reference qubit mapping state"
+    #                          "with kwarg 'qms' to be able to calculate the fidelity.")
     # dealing with a simple GKP state or a superposition of states.
     if superposition_state:
         if GKP_obj:
@@ -262,15 +282,9 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             prob *= prob_prime
             if (n_round+1) % 2:
                 rot_rho = Y*rho*Y.dag()
-                if qubit_mapping:
-                    fidelities.append(qb_mapping_fidelity(rho,fid_rho))
-                else:
-                    fidelities.append(fidelity(rot_rho, fid_rho))
+                fidelities.append(get_fidelities(rot_rho,fid_rho,qms)[qubit_mapping])
             else:
-                if qubit_mapping:
-                    fidelities.append(qb_mapping_fidelity(rho, fid_rho))
-                else:
-                    fidelities.append(fidelity(rho,fid_rho))
+                fidelities.append(get_fidelities(rho, fid_rho,qms)[qubit_mapping])
             probabilities.append(prob)
     fid_arr,prob_arr = np.real(np.array(fidelities)),np.real(np.array(probabilities))
     # ploting colormaps
@@ -325,7 +339,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
                 x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
                 y_fit = parabolic(x_fit,*popt)
                 axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}, \gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
-                axs[0].text(0.05,0.52,r"$F = \alpha x^2 + \beta x + \gamma$")
+            axs[0].text(0.05,min(y_fit)+0.02,r"$F = \alpha x^2 + \beta x + \gamma$")
             for v_trace,v_ix in zip(v_traces,traces_ix[1]):
                 v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
             axs[0].set_title("Horizontal traces")
