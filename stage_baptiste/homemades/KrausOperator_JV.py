@@ -129,10 +129,10 @@ def qb_mapping_fidelity(state,state_ref,basic_qubit_ref):
     dim = state.shape[0]
     Ds = np.sqrt(pi/2), np.sqrt(pi/2)*(1+1j), np.sqrt(pi/2)*1j
     X,Y,Z = [displace(dim, gamma) for gamma in Ds]  # X,Z,Y
-    r_qubit,r_ref = [np.array([(op*st).tr() for op in [X,Y,Z]]) for st in [state,state_ref]]
+    r_qubit,r_ref = [np.array([np.real((op*st).tr()) for op in [X,Y,Z]]) for st in [state,state_ref]]
     sigs = np.array([sigmax(),sigmay(),sigmaz()])
     mapped_qubit,mapped_qubit_ref = [(qeye(2) + Qobj(sum(r[:,None,None]*sigs)))/2 for r in [r_qubit,r_ref]]
-    fid = fidelity(mapped_qubit,mapped_qubit_ref)
+    fid = fidelity(mapped_qubit,basic_qubit_ref)
     return fid
 
 
@@ -253,8 +253,8 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     N_rounds = np.arange(0,max_N_rounds,N_rounds_steps)
     a = destroy(dim)
     options = Options(nsteps=2000)
-    fid_rho = mesolve(-H, state, t_list, [], [], options=options).states[-1]  # reference state for fidelity (no c_ops)
-    print(f"fidelity state done.")
+    fid_rho = mesolve(-H, state, t_list, [], [], options=options).states[-1]  # reference state for fidelity (no c_ops
+    print(f"fidelity state done.")                                            # in evolution)
     e_states = []  # with c_ops evolution
     # evolving the state under photon loss error
     for count,kap in enumerate(kap_list):
@@ -269,7 +269,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     for e_state in e_states:
         rho = e_state/e_state.tr()  # uncorrected state
         prob = 1  # probability of getting that state (neglecting randomness in c_op evolution if there is any) ***
-        fidelities.append(fidelity(rho,fid_rho))
+        fidelities.append(get_fidelities(rho,fid_rho,bqr)[qubit_mapping])
         probabilities.append(prob)
         for n_round in range(max_N_rounds):
             if mode == 'random':
@@ -287,7 +287,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
                 rot_rho = Y*rho*Y.dag()
                 fidelities.append(get_fidelities(rot_rho,fid_rho,bqr)[qubit_mapping])
             else:
-                fidelities.append(get_fidelities(rho, fid_rho,bqr)[qubit_mapping])
+                fidelities.append(get_fidelities(rho,fid_rho,bqr)[qubit_mapping])
             probabilities.append(prob)
     fid_arr,prob_arr = np.real(np.array(fidelities)),np.real(np.array(probabilities))
     # ploting colormaps

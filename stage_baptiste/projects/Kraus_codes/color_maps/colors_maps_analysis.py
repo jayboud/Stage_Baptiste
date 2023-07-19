@@ -21,14 +21,19 @@ N_op = a.dag()*a
 GKP_obj = GKP(d,j,delta,hilbert_dim)
 H = N_op**2
 tgate = pi/8
-max_error_rate = 1
+max_error_rate = 1.0
 max_N_rounds = 30
 fig_name = "qbmapping_sqrtH_gg_cmap_2"
 tr_fig_name = "qbmapping_sqrtH_quad_traces_2"
 fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/"
 ground = basis(2,0)
 sqrtH = np.cos(np.pi/4)*qeye(2) - 1j*np.sin(np.pi/4)*(sigmax()+sigmaz())/np.sqrt(2)
-qms = sqrtH*ground*ground.dag()*sqrtH.dag()
+bqr = sqrtH*ground*ground.dag()*sqrtH.dag()
 color_maps(GKP_obj, H, tgate, max_error_rate, max_N_rounds, kap_num=15, mode='gg',
-           traces=True,traces_ix=[[2,4,6,8],[2,4,6,8]],qubit_mapping=True,qms=qms,
+           traces=True,traces_ix=[[2,4,6,8],[2,4,6,8]],qubit_mapping=True,bqr=bqr,
            fig_name=fig_name,traces_fig_name=tr_fig_name,fig_path=fig_path,show=True)
+
+
+# methode du paysan (diviser par le max)
+# methode du fonctionnaire (améliorer les bins)
+# methode du roi
