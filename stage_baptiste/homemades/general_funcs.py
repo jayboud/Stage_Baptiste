@@ -12,11 +12,29 @@ from stage_baptiste.homemades.finite_GKP import get_d_gkp, GKP
 from scipy.constants import pi
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from functools import wraps
+
+
+def cache(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        last_args, last_kwargs, last_outputs = wrapper._cache
+        nb_args_match = len(args) == len(last_args)
+        keys_match = kwargs.keys() == last_kwargs.keys()
+        if nb_args_match and keys_match:
+            args_match = all([np.all(np.equal(a_new, a_old)) for a_new, a_old in zip(args, last_args)])
+            kwargs_match = all([np.all(np.equal(kwargs[key], arg)) for key, arg in kwargs.items()])
+            if last_outputs is not None and args_match and kwargs_match:
+                return last_outputs
+        wrapper._cache = [args, kwargs, func(*args)]
+        return wrapper._cache[-1]
+    wrapper._cache = [tuple(), dict(), None]
+    return wrapper
 
 
 def chi_function(rho,z_max):
     """
-
+    ****** not completed *******
     Args:
         rho: ndarray
             The density matrix.

@@ -15,10 +15,26 @@ from qutip import *
 from scipy.constants import pi
 from scipy.optimize import curve_fit
 from stage_baptiste.homemades.finite_GKP import GKP
+from stage_baptiste.homemades.general_funcs import cache
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 # from matplotlib import cm
 # from matplotlib.ticker import LinearLocator
+
+
+@cache
+def get_error_states(H,state,dim,t_list,kap_list):
+    a = destroy(dim)
+    options = Options(nsteps=2000)
+    fid_rho = mesolve(-H, state, t_list, [], [], options=options).states[-1]  # reference state for fidelity (no c_ops
+    print("fidelity state done.")  # in evolution)
+    e_states = []  # with c_ops evolution
+    # evolving the state under photon loss error
+    for count, kap in enumerate(kap_list):
+        e_states.append(mesolve(-H, state, t_list, [np.sqrt(kap) * a], [], options=options).states[-1])
+        print(f"fidelity {fidelity(fid_rho, e_states[-1])}")
+        print(f"e_states {count} done.")
+    return fid_rho, e_states
 
 
 def opListsBs2(GKP):
@@ -129,6 +145,7 @@ def qb_mapping_fidelity(state,state_ref,basic_qubit_ref):
     dim = state.shape[0]
     Ds = np.sqrt(pi/2), np.sqrt(pi/2)*(1+1j), np.sqrt(pi/2)*1j
     X,Y,Z = [displace(dim, gamma) for gamma in Ds]  # X,Z,Y
+    # r_qubit,r_ref = [np.array([np.real((op*st).tr()) for op in [X,Y,Z]]) for st in [state,state_ref]]
     r_qubit,r_ref = [np.array([np.real((op*st).tr()) for op in [X,Y,Z]]) for st in [state,state_ref]]
     sigs = np.array([sigmax(),sigmay(),sigmaz()])
     mapped_qubit,mapped_qubit_ref = [(qeye(2) + Qobj(sum(r[:,None,None]*sigs)))/2 for r in [r_qubit,r_ref]]
@@ -251,16 +268,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
     kap_list = np.linspace(0,kap_max,kap_num)
     rate_list = np.linspace(0,max_error_rate,kap_num)
     N_rounds = np.arange(0,max_N_rounds,N_rounds_steps)
-    a = destroy(dim)
-    options = Options(nsteps=2000)
-    fid_rho = mesolve(-H, state, t_list, [], [], options=options).states[-1]  # reference state for fidelity (no c_ops
-    print(f"fidelity state done.")                                            # in evolution)
-    e_states = []  # with c_ops evolution
-    # evolving the state under photon loss error
-    for count,kap in enumerate(kap_list):
-        e_states.append(mesolve(-H,state,t_list,[np.sqrt(kap)*a],[],options=options).states[-1])
-        print(f"fidelity {fidelity(fid_rho,e_states[-1])}")
-        print(f"e_states {count} done.")
+    fid_rho,e_states = get_error_states(H,state,dim,t_list,kap_list)
     opList = opListsBs2(the_GKP)
     corrections = [opList[0][0] * opList[1][0], opList[0][0] * opList[1][1],  # [Bgg, Bge
                    opList[0][1] * opList[1][0], opList[0][1] * opList[1][1]]  # Beg, Bee]
@@ -342,7 +350,7 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
                 x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
                 y_fit = parabolic(x_fit,*popt)
                 axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}, \gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
-            axs[0].text(0.05,min(y_fit)+0.02,r"$F = \alpha x^2 + \beta x + \gamma$")
+            axs[0].text(0.05,min(y_fit),r"$F = \alpha x^2 + \beta x + \gamma$")
             for v_trace,v_ix in zip(v_traces,traces_ix[1]):
                 v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
             axs[0].set_title("Horizontal traces")
