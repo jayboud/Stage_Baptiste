@@ -9,7 +9,7 @@ import numpy as np
 from scipy.constants import pi
 from qutip import *
 from stage_baptiste.homemades.finite_GKP import GKP
-from stage_baptiste.homemades.KrausOperator_JV import color_maps
+from stage_baptiste.homemades.KrausOperator_JV import *
 
 d = 2
 j = 0
@@ -23,17 +23,25 @@ H = N_op**2
 tgate = pi/8
 max_error_rate = 0.1
 max_N_rounds = 30
-fig_name = "qbmapping_sqrtH_gg_cmap_3"
-tr_fig_name = "qbmapping_sqrtH_quad_traces_3"
+
+fig_name = "qbmapping_sqrtH_gg_cmap_4"
+tr_fig_name = "qbmapping_sqrtH_quad_traces_4"
 fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/"
 ground = basis(2,0)
 sqrtH = np.cos(np.pi/4)*qeye(2) - 1j*np.sin(np.pi/4)*(sigmax()+sigmaz())/np.sqrt(2)
 bqr = sqrtH*ground*ground.dag()*sqrtH.dag()
-color_maps(GKP_obj, H, tgate, max_error_rate, max_N_rounds, kap_num=15, mode='gg',
-           traces=True,traces_ix=[[2,4,6,8],[2,4,6,8]],qubit_mapping=True,bqr=bqr,
-           fig_name=fig_name,traces_fig_name=tr_fig_name,fig_path=fig_path,show=True)
+
+fid_arr,prob_arr,params = get_fid_n_prob_data(GKP_obj, H, tgate, max_error_rate, max_N_rounds,
+                                              kap_num=10, mode='gg',qubit_mapping=True,bqr=bqr)
+
+plot_cmaps(fid_arr,prob_arr,*params,
+           mode='gg',fig_path=fig_path,
+           fig_name=fig_name,save=True,show=False)
+
+plot_fid_traces(fid_arr,*params,traces_ix=[[2,4,6,8],[2,4,6,8]],
+                fig_path=fig_path,traces_fig_name=tr_fig_name,save=True,show=False)
 
 
 # methode du paysan (diviser par le max)
 # methode du fonctionnaire (améliorer les bins)
-# methode du roi
+# methode du roi (?)

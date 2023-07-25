@@ -11,7 +11,7 @@ x_op = (a + a.dag())/np.sqrt(2)
 p_op = (a - a.dag())/(1j*np.sqrt(2))
 eigs,bins = [],[]
 for op in [x_op,p_op]:
-    op_eig = np.array(x_op.eigenenergies())
+    op_eig = np.array(op.eigenenergies())
     eigs.append(op_eig)
     op_bins = np.copy(op_eig)
     condition = abs(abs(op_bins)/np.sqrt(pi) - abs(op_bins)/np.sqrt(pi)//1)
@@ -22,3 +22,5 @@ for op in [x_op,p_op]:
 
 plt.plot(eigs[0],bins[0])
 plt.plot(bins[1],eigs[1])
+plt.savefig('bins')
+plt.show()

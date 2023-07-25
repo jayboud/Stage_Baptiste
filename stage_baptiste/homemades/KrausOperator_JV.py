@@ -15,14 +15,12 @@ from qutip import *
 from scipy.constants import pi
 from scipy.optimize import curve_fit
 from stage_baptiste.homemades.finite_GKP import GKP
-from stage_baptiste.homemades.general_funcs import cache
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 # from matplotlib import cm
 # from matplotlib.ticker import LinearLocator
 
 
-@cache
 def get_error_states(H,state,dim,t_list,kap_list):
     a = destroy(dim)
     options = Options(nsteps=2000)
@@ -144,8 +142,26 @@ def qb_mapping_fidelity(state,state_ref,basic_qubit_ref):
     """
     dim = state.shape[0]
     Ds = np.sqrt(pi/2), np.sqrt(pi/2)*(1+1j), np.sqrt(pi/2)*1j
+    # --------- bin method --------------
+    # a = destroy(dim)
+    # x_op = (a + a.dag())/np.sqrt(2)
+    # p_op = (a - a.dag())/(1j*np.sqrt(2))
+    # eig_vals, bins, eig_states = [], [], []
+    # for op in [x_op, p_op]:
+    #     op_eigvals,op_eig_states = op.eigenstates()
+    #     eig_vals.append(op_eigvals)
+    #     eig_states.append(op_eig_states)
+    #     op_bins = np.copy(op_eigvals)
+    #     condition = abs(abs(op_bins)/np.sqrt(pi) - abs(op_bins)/np.sqrt(pi)//1)
+    #     up_bins, down_bins = condition < 1/2, condition > 1/2
+    #     op_bins[up_bins], op_bins[down_bins] = 1, -1
+    #     bins.append(op_bins)
+    # Z = Qobj(np.sum([a_bin*eig_state*eig_state.dag() for a_bin,eig_state in zip(bins[0],eig_states[0])],axis=0))
+    # X = Qobj(np.sum([a_bin*eig_state*eig_state.dag() for a_bin,eig_state in zip(bins[1],eig_states[1])],axis=0))
+    # Y = -1j*Z*X
+    # ---------------- other method ----------------
     X,Y,Z = [displace(dim, gamma) for gamma in Ds]  # X,Z,Y
-    # r_qubit,r_ref = [np.array([np.real((op*st).tr()) for op in [X,Y,Z]]) for st in [state,state_ref]]
+    r_qubit,r_ref = [np.array([np.real((op*st).tr()) for op in [X,Y,Z]]) for st in [state,state_ref]]
     r_qubit,r_ref = [np.array([np.real((op*st).tr()) for op in [X,Y,Z]]) for st in [state,state_ref]]
     sigs = np.array([sigmax(),sigmay(),sigmaz()])
     mapped_qubit,mapped_qubit_ref = [(qeye(2) + Qobj(sum(r[:,None,None]*sigs)))/2 for r in [r_qubit,r_ref]]
@@ -168,14 +184,11 @@ def get_fidelities(A,B,basic_qubit_ref):
     return [fidelity(A,B),qb_mapping_fidelity(A,B,basic_qubit_ref)]
 
 
-def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',
-               qubit_mapping=False,bqr=None,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,traces=False,
-               traces_ix=[[],[]],fig_name=None,traces_fig_name=None,fig_path=None,save=True,show=False):
+def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',
+               qubit_mapping=False,bqr=None,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None):
     """
-    Function that calculates and plot a fidelity colormap (and a probability colormap if mode=gg) of sBs error correction
-    protocol applied to a qubit state evolving under photon loss error sqrt(kappa)*a . The x and y axis
-    of the colormap are respectively the dimensionless error rate kappa*tgate (kappa is in tgate units)
-    and the number of error correcting rounds.
+    Function that calculates fidelity colormap data (and probability if mode=gg) of sBs error correction
+    protocol applied to a qubit state evolving under photon loss error sqrt(kappa)*a .
     Args:
         GKP_obj: GKP object (None if superposition_state)
             The object containing everything relevant
@@ -214,24 +227,13 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
             The enveloppe on the finite stats of the superposition.
         ss_hilbert_dim: int (if superposition_state)
             The hilbert dimension in Fock space of states in the superposition state.
-        traces: bool
-            Plotting a horizontal (vertical) trace of fidelity for a fixed
-            number of error correcting rounds (fixed error rate).
-        traces_ix: list of lists of ints [[rounds_ix],[error_rate_ix]]
-            The list of index of rounds and error rates to plot traces of.
-        fig_name: string
-            The name under which to save the figure.
-        traces_fig_name: string
-            The name under which to save traces figure.
-        fig_path: string
-            The path and the name of the saved colormap.
-        save: bool
-            Saving the figure.
-        show: bool
-            Showing the figure.
-
-    Creates a matplotlib figure of the desired colormap (fidelity or probability) with
-    the error rate on the x axis and the number of error correcting rounds on the y axis.
+    Returns:
+        fid_arr: ndarray of floats
+            Fidelity data.
+        prob_arr: ndarray of floats
+            Probability data.
+        params: list [ndarray of floats, ndarray of ints, int]
+            [rate_list, N_rounds, max_N_rounds].
 
     """
     if mode not in ['random','gg','avg']:
@@ -298,7 +300,36 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
                 fidelities.append(get_fidelities(rho,fid_rho,bqr)[qubit_mapping])
             probabilities.append(prob)
     fid_arr,prob_arr = np.real(np.array(fidelities)),np.real(np.array(probabilities))
-    # ploting colormaps
+    params = [rate_list,N_rounds,max_N_rounds]
+    return fid_arr,prob_arr,params
+
+
+def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',fig_path=None,fig_name=None,save=True,show=False):
+    """
+    Function that plots a fidelity colormap (and a probability colormap if mode=gg). The x and y axis
+    of the colormap are respectively the dimensionless error rate kappa*tgate (kappa is in tgate units)
+    and the number of error correcting rounds.
+    Args:
+        fid_arr: ndarray of floats
+            Fidelity data.
+        prob_arr: ndarray of floats
+            Probability data.
+        *params: [ndarray of floats, ndarray of ints, int]
+            [rate_list,N_rounds,max_N_rounds].
+        mode:
+        fig_name:
+        fig_path: string
+            The path to save the figure.
+        save: bool
+            Wether to save or not the figure at fig_path.
+        show: bool
+            Wether to show or not the figure.
+
+    Returns:
+        A colormap of fidelity (and probability if 'gg').
+
+    """
+    rate_list, N_rounds, max_N_rounds = params
     xvec,yvec = rate_list,np.append(N_rounds,max_N_rounds)
     fid = np.reshape(fid_arr, (len(xvec), len(yvec))).T
     pro = np.reshape(prob_arr, (len(xvec), len(yvec))).T
@@ -324,64 +355,96 @@ def color_maps(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,
         plt.savefig(fig_path+fig_name)
     if show:
         plt.show()
-    plt.clf()
+    return
+
+
+def plot_fid_traces(fid_arr,*params,traces_ix=[[2,4,6,8],[2,4,6,8]],fig_path=None,traces_fig_name=None,save=True,show=False):
+    """
+    Function that plots fidelity traces for
+    chosen error rate and/or number of error correcting rounds.
+
+    Args:
+        fid_arr: ndarray of floats
+            Fidelity data.
+        *params: [ndarray of floats, ndarray of ints, int]
+            [rate_list,N_rounds,max_N_rounds].
+        traces_ix: list of ints
+            The indexes that select error rates and/or
+            number of error correcting rounds.
+        fig_path: string
+            The path to save the figure.
+        traces_fig_name: string
+            The name of the figure.
+        save: bool
+            Wether to save or not the figure at fig_path.
+        show: bool
+            Wether to show or not the figure.
+
+    Returns:
+        A plot of fidelity traces.
+
+    """
+    rate_list, N_rounds, max_N_rounds = params
+    xvec, yvec = rate_list, np.append(N_rounds, max_N_rounds)
+    fid = np.reshape(fid_arr, (len(xvec), len(yvec))).T
     # horizontal and vertical traces
-    if traces:
-        if not isinstance(traces_ix[0],list):
-            traces_ix = [traces_ix,[]]
-        horizontals = np.array(fid[traces_ix[0],:])
+    if not isinstance(traces_ix[0],list):
+        traces_ix = [traces_ix,[]]
+    horizontals = np.array(fid[traces_ix[0],:])
+    if traces_ix[1]:
+        verticals = np.array(fid[:, traces_ix[1]])
+    if not traces_ix[0] and not traces_ix[1]:
+        raise ValueError("You have to choose some indexes to plot in"
+                         "traces_ix = [[n_rounds_ixs],[error_rates_ixs]]. "
+                         "Providing one list will be assumed to be n_rounds_idx.")
+    elif traces_ix[0] and traces_ix[1]:
+        def parabolic(x, a, b, c):
+            return a*x**2 + b*x + c
+        fig,axs = plt.subplots(1,2, figsize=(10,4))
+        h_traces = axs[0].plot(xvec,horizontals.T)
+        v_traces = axs[1].plot(yvec,verticals)
+        for h_trace,h_ix in zip(h_traces,traces_ix[0]):
+            x_data,y_data = h_trace.get_data()[0],h_trace.get_data()[1]
+            popt,pcov = curve_fit(parabolic,x_data,y_data)
+            x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
+            y_fit = parabolic(x_fit,*popt)
+            axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}, \gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
+        axs[0].text(0.05,min(y_fit),r"$F = \alpha x^2 + \beta x + \gamma$")
+        for v_trace,v_ix in zip(v_traces,traces_ix[1]):
+            v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
+        axs[0].set_title("Horizontal traces")
+        axs[1].set_title("Vertical traces")
+        axs[0].set_xlabel(r"$\kappa t_{gate}$")
+        axs[1].set_xlabel("N_rounds")
+        axs[0].set_ylabel(r"$F$",rotation=0)
+        # axs[0].set_ylim(0,1)
+        axs[1].sharey = axs[0]
+        for ax in axs:
+            ax.legend(loc="upper right")
+    else:
+        fig, ax = plt.subplots(figsize=(10, 8))
+        if traces_ix[0]:
+            h_traces = ax.plot(xvec, horizontals.T)
+            for h_trace, h_ix in zip(h_traces, traces_ix[0]):
+                h_trace.set(label=f"N rounds = {h_ix}")
+            ax.set_title("Horizontal traces")
+            ax.set_xlabel(r"$\kappa t_{gate}$")
         if traces_ix[1]:
-            verticals = np.array(fid[:, traces_ix[1]])
-        if not traces_ix[0] and not traces_ix[1]:
-            raise ValueError("You have to choose some indexes to plot in"
-                             "traces_ix = [[n_rounds_ixs],[error_rates_ixs]]. "
-                             "Providing one list will be assumed to be n_rounds_idx.")
-        elif traces_ix[0] and traces_ix[1]:
-            def parabolic(x, a, b, c):
-                return a*x**2 + b*x +c
-            def linear(x, a, b):
-                return a*x + b
-            fig,axs = plt.subplots(1,2, figsize=(10,4))
-            h_traces = axs[0].plot(xvec,horizontals.T)
-            v_traces = axs[1].plot(yvec,verticals)
-            for h_trace,h_ix in zip(h_traces,traces_ix[0]):
-                x_data,y_data = h_trace.get_data()[0],h_trace.get_data()[1]
-                popt,pcov = curve_fit(parabolic,x_data,y_data)
-                x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
-                y_fit = parabolic(x_fit,*popt)
-                axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}, \gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
-            axs[0].text(0.05,min(y_fit),r"$F = \alpha x^2 + \beta x + \gamma$")
-            for v_trace,v_ix in zip(v_traces,traces_ix[1]):
-                v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
-            axs[0].set_title("Horizontal traces")
-            axs[1].set_title("Vertical traces")
-            axs[0].set_xlabel(r"$\kappa t_{gate}$")
-            axs[1].set_xlabel("N_rounds")
-            axs[0].set_ylabel(r"$F$",rotation=0)
-            # axs[0].set_ylim(0,1)
-            axs[1].sharey = axs[0]
-            for ax in axs:
-                ax.legend(loc="upper right")
-        else:
-            fig, ax = plt.subplots(figsize=(10, 8))
-            if traces_ix[0]:
-                h_traces = ax.plot(xvec, horizontals.T)
-                for h_trace, h_ix in zip(h_traces, traces_ix[0]):
-                    h_trace.set(label=f"N rounds = {h_ix}")
-                ax.set_title("Horizontal traces")
-                ax.set_xlabel(r"$\kappa t_{gate}$")
-            if traces_ix[1]:
-                v_traces = ax.plot(yvec, verticals)
-                for v_trace, v_ix in zip(v_traces, traces_ix[1]):
-                    v_trace.set(label=r"$\kappa t_{gate} = $" + f"{round(xvec[v_ix], 3)}")
-                ax.set_title("Vertical traces")
-                ax.set_xlabel("N_rounds")
-            ax.set_ylabel(r"$F$",rotation=0)
-            # ax.set_ylim(0, 1)
-        plt.legend()
-        if save:
-            plt.savefig(fig_path + traces_fig_name)
-        if show:
-            plt.show()
+            v_traces = ax.plot(yvec, verticals)
+            for v_trace, v_ix in zip(v_traces, traces_ix[1]):
+                v_trace.set(label=r"$\kappa t_{gate} = $" + f"{round(xvec[v_ix], 3)}")
+            ax.set_title("Vertical traces")
+            ax.set_xlabel("N_rounds")
+        ax.set_ylabel(r"$F$",rotation=0)
+        # ax.set_ylim(0, 1)
+    plt.legend()
+    if save:
+        plt.savefig(fig_path + traces_fig_name)
+    if show:
+        plt.show()
 
     return
+
+
+# why divide by the maximum? It will only separate measurments errors from the rest
+# for the maximum fidelity???
