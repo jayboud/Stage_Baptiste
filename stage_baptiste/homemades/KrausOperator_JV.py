@@ -29,13 +29,13 @@ def get_error_states(H,state,dim,t_list,kap_list):
     e_states = []  # with c_ops evolution
     # evolving the state under photon loss error
     for count, kap in enumerate(kap_list):
-        e_states.append(mesolve(-H, state, t_list, [np.sqrt(kap) * a], [], options=options).states[-1])
+        e_states.append(mesolve(-H, state, t_list, [np.sqrt(kap)*a], [], options=options).states[-1])
         print(f"fidelity {fidelity(fid_rho, e_states[-1])}")
         print(f"e_states {count} done.")
     return fid_rho, e_states
 
 
-def opListsBs2(GKP):
+def opListsBs2(GKP,pi_o_s=False):
     """
     Function to create Kraus operators
     There are 2 stabilizers (x and p),
@@ -59,7 +59,10 @@ def opListsBs2(GKP):
     d = GKP.d
     env = GKP.delta
     dim = GKP.hilbert_dim
-    latticeGens = [np.sqrt(2*pi*d),1j*np.sqrt(2*pi*d)]
+    if pi_o_s:
+        latticeGens = [(np.sqrt(2*pi*d)+1j*np.sqrt(2*pi*d))/(4*np.sqrt(pi)), (-np.sqrt(2*pi*d)+1j*np.sqrt(2*pi*d))/(4*np.sqrt(pi))]
+    else:
+        latticeGens = [np.sqrt(2*pi*d),1j*np.sqrt(2*pi*d)]
     Klist = []
     for i in range(2):
         latGen = latticeGens[i]
@@ -165,7 +168,8 @@ def qb_mapping_fidelity(state,state_ref,basic_qubit_ref):
     r_qubit,r_ref = [np.array([np.real((op*st).tr()) for op in [X,Y,Z]]) for st in [state,state_ref]]
     sigs = np.array([sigmax(),sigmay(),sigmaz()])
     mapped_qubit,mapped_qubit_ref = [(qeye(2) + Qobj(sum(r[:,None,None]*sigs)))/2 for r in [r_qubit,r_ref]]
-    fid = fidelity(mapped_qubit,basic_qubit_ref)
+    # fid = fidelity(mapped_qubit,basic_qubit_ref)  # with bqr
+    fid = fidelity(mapped_qubit,mapped_qubit_ref)  # both mapped
     return fid
 
 
@@ -181,11 +185,15 @@ def get_fidelities(A,B,basic_qubit_ref):
         The fidelities.
 
     """
-    return [fidelity(A,B),qb_mapping_fidelity(A,B,basic_qubit_ref)]
+    if basic_qubit_ref:
+        out = [fidelity(A,B),qb_mapping_fidelity(A,B,basic_qubit_ref)]
+    else:
+        out = [fidelity(A,B)]
+    return out
 
 
 def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',
-               qubit_mapping=False,bqr=None,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None):
+               qubit_mapping=False,bqr=None,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,pi_o_s=False):
     """
     Function that calculates fidelity colormap data (and probability if mode=gg) of sBs error correction
     protocol applied to a qubit state evolving under photon loss error sqrt(kappa)*a .
@@ -271,7 +279,7 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
     rate_list = np.linspace(0,max_error_rate,kap_num)
     N_rounds = np.arange(0,max_N_rounds,N_rounds_steps)
     fid_rho,e_states = get_error_states(H,state,dim,t_list,kap_list)
-    opList = opListsBs2(the_GKP)
+    opList = opListsBs2(the_GKP,pi_o_s=pi_o_s)
     corrections = [opList[0][0] * opList[1][0], opList[0][0] * opList[1][1],  # [Bgg, Bge
                    opList[0][1] * opList[1][0], opList[0][1] * opList[1][1]]  # Beg, Bee]
     fidelities,probabilities = [],[]  # initializing lists
@@ -358,7 +366,7 @@ def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',fig_path=None,fig_name=None,sa
     return
 
 
-def plot_fid_traces(fid_arr,*params,traces_ix=[[2,4,6,8],[2,4,6,8]],fig_path=None,traces_fig_name=None,save=True,show=False):
+def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],fig_path=None,traces_fig_name=None,save=True,show=False):
     """
     Function that plots fidelity traces for
     chosen error rate and/or number of error correcting rounds.
@@ -390,53 +398,40 @@ def plot_fid_traces(fid_arr,*params,traces_ix=[[2,4,6,8],[2,4,6,8]],fig_path=Non
     # horizontal and vertical traces
     if not isinstance(traces_ix[0],list):
         traces_ix = [traces_ix,[]]
-    horizontals = np.array(fid[traces_ix[0],:])
-    if traces_ix[1]:
-        verticals = np.array(fid[:, traces_ix[1]])
     if not traces_ix[0] and not traces_ix[1]:
         raise ValueError("You have to choose some indexes to plot in"
                          "traces_ix = [[n_rounds_ixs],[error_rates_ixs]]. "
                          "Providing one list will be assumed to be n_rounds_idx.")
-    elif traces_ix[0] and traces_ix[1]:
-        def parabolic(x, a, b, c):
-            return a*x**2 + b*x + c
-        fig,axs = plt.subplots(1,2, figsize=(10,4))
-        h_traces = axs[0].plot(xvec,horizontals.T)
-        v_traces = axs[1].plot(yvec,verticals)
-        for h_trace,h_ix in zip(h_traces,traces_ix[0]):
-            x_data,y_data = h_trace.get_data()[0],h_trace.get_data()[1]
-            popt,pcov = curve_fit(parabolic,x_data,y_data)
-            x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
-            y_fit = parabolic(x_fit,*popt)
-            axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}, \gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
-        axs[0].text(0.05,min(y_fit),r"$F = \alpha x^2 + \beta x + \gamma$")
-        for v_trace,v_ix in zip(v_traces,traces_ix[1]):
-            v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
-        axs[0].set_title("Horizontal traces")
-        axs[1].set_title("Vertical traces")
-        axs[0].set_xlabel(r"$\kappa t_{gate}$")
-        axs[1].set_xlabel("N_rounds")
-        axs[0].set_ylabel(r"$F$",rotation=0)
-        # axs[0].set_ylim(0,1)
-        axs[1].sharey = axs[0]
-        for ax in axs:
-            ax.legend(loc="upper right")
-    else:
-        fig, ax = plt.subplots(figsize=(10, 8))
-        if traces_ix[0]:
-            h_traces = ax.plot(xvec, horizontals.T)
-            for h_trace, h_ix in zip(h_traces, traces_ix[0]):
-                h_trace.set(label=f"N rounds = {h_ix}")
-            ax.set_title("Horizontal traces")
-            ax.set_xlabel(r"$\kappa t_{gate}$")
-        if traces_ix[1]:
-            v_traces = ax.plot(yvec, verticals)
-            for v_trace, v_ix in zip(v_traces, traces_ix[1]):
-                v_trace.set(label=r"$\kappa t_{gate} = $" + f"{round(xvec[v_ix], 3)}")
-            ax.set_title("Vertical traces")
-            ax.set_xlabel("N_rounds")
-        ax.set_ylabel(r"$F$",rotation=0)
-        # ax.set_ylim(0, 1)
+    for i in [0,1]:
+        if not traces_ix[i]:
+            traces_ix[i] = traces_ix[i-1]  # makes sure that both v_ixs and h_ixs exist
+    horizontals = np.array(fid[traces_ix[0],:])
+    # horizontals = np.array(fid[traces_ix[0],:])/fid[8,0]  # normalisation
+    verticals = np.array(fid[:, traces_ix[1]])
+    # verticals = np.array(fid[:, traces_ix[1]])/fid[8,0]  # normalisation
+    def parabolic(x, a, b, c):
+        return a*x**2 + b*x + c
+    fig,axs = plt.subplots(1,2, figsize=(10,4))
+    h_traces = axs[0].plot(xvec,horizontals.T)
+    v_traces = axs[1].plot(yvec,verticals)
+    for h_trace,h_ix in zip(h_traces,traces_ix[0]):
+        x_data,y_data = h_trace.get_data()[0],h_trace.get_data()[1]
+        popt,pcov = curve_fit(parabolic,x_data,y_data)
+        x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
+        y_fit = parabolic(x_fit,*popt)
+        axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}, \gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
+    axs[0].text(0.05,min(y_fit),r"$F = \alpha x^2 + \beta x + \gamma$")
+    for v_trace,v_ix in zip(v_traces,traces_ix[1]):
+        v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
+    axs[0].set_title("Horizontal traces")
+    axs[1].set_title("Vertical traces")
+    axs[0].set_xlabel(r"$\kappa t_{gate}$")
+    axs[1].set_xlabel("N_rounds")
+    axs[0].set_ylabel(r"$F$",rotation=0)
+    # axs[0].set_ylim(0,1)
+    axs[1].sharey = axs[0]
+    for ax in axs:
+        ax.legend(loc="upper right")
     plt.legend()
     if save:
         plt.savefig(fig_path + traces_fig_name)
@@ -444,7 +439,3 @@ def plot_fid_traces(fid_arr,*params,traces_ix=[[2,4,6,8],[2,4,6,8]],fig_path=Non
         plt.show()
 
     return
-
-
-# why divide by the maximum? It will only separate measurments errors from the rest
-# for the maximum fidelity???

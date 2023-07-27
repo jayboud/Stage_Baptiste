@@ -77,7 +77,7 @@ ax1.text(-6,6.5,rf"$\Delta = {delta}$")
 ax1.text(-6,5.8,rf"$N = {dim}$")
 ax1.text(-6,5.0,r"$U = e^{i\frac{\pi}{16}n^2}$")
 # mesuring dimension of grid
-ax1.plot([0,0],[0,np.sqrt(pi)],'-',lw=1.5,color="black")
+ax1.plot([0,np.sqrt(pi/2)],[0,np.sqrt(pi/2)],'-',lw=1.5,color="black")
 ax1.text(np.sqrt(pi/2)/4,np.sqrt(pi)/2,r"$\sqrt{\pi}$",color="black",rotation=0)
 
 plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Pieceable_sqrtH/figs/margin_GKP_{dim},t=pi16")
