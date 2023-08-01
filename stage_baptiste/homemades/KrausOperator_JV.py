@@ -60,7 +60,7 @@ def opListsBs2(GKP,pi_o_s=False):
     env = GKP.delta
     dim = GKP.hilbert_dim
     if pi_o_s:
-        latticeGens = [(np.sqrt(2*pi*d)+1j*np.sqrt(2*pi*d))/(4*np.sqrt(pi)), (-np.sqrt(2*pi*d)+1j*np.sqrt(2*pi*d))/(4*np.sqrt(pi))]
+        latticeGens = [(np.sqrt(pi*d)+1j*np.sqrt(pi*d)), (-np.sqrt(pi*d)+1j*np.sqrt(pi*d))]
     else:
         latticeGens = [np.sqrt(2*pi*d),1j*np.sqrt(2*pi*d)]
     Klist = []

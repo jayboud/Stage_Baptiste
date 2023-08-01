@@ -94,14 +94,17 @@ H = a.dag()*a
 
 
 n = a.dag()*a
-H = n
+H = n*n
 
-tf = pi/2
-tlist = np.linspace(0,tf,100)  # times for animation
+tf = pi/8
+spec_tf = 0.01
+tlist = np.linspace(0,spec_tf,70)  # times for animation
+mid_tlist = np.linspace(0,pi/16-0.005,10)  # times for middle state
 # tlist = np.linspace(0,tf,1200)  # times for expectation values
-options = Options(store_states=True)  # get states even if e_ops are calculated
-one_osc = osc = GKP(2,0,delta,dim).state
-outs = [mesolve(H, one_osc, tlist, [], [D],options=options) for D in Ds]
+options = Options(store_states=True,nsteps=2500)  # get states even if e_ops are calculated
+osc = GKP(2,0,delta,dim).state
+mid_outs = [mesolve(-H, osc, mid_tlist, [], [],options=options) for D in Ds]
+outs = [mesolve(-H, mid_outs[0].states[-1], tlist, [], [D],options=options) for D in Ds]
 
 
 # sqrtH Wigner function
@@ -117,9 +120,9 @@ outs = [mesolve(H, one_osc, tlist, [], [D],options=options) for D in Ds]
 
 
 debut = np.zeros(4,dtype=int).tolist()
-fin = (tf*np.ones(4)).tolist()
+fin = (tf*np.ones(8)).tolist()
 gif_tlist = debut+tlist.tolist()+fin  # times (0 to 3pi/8) with supplementary 0s and 3pi/8s for gif
-frames = debut+np.arange(0,len(tlist),1).tolist()+(range(len(tlist))[-1]*np.ones(4,dtype=int)).tolist()  # index (0,1,2,3,...)
+frames = np.arange(0,len(tlist),1).tolist()  # index (0,1,2,3,...)
 fig, ax = plt.subplots(figsize=(5, 4))
 ax.set_xlabel(r'$\rm{Re}(\alpha)$', fontsize=12)
 ax.set_ylabel(r'$\rm{Im}(\alpha)$', fontsize=12)
@@ -145,10 +148,10 @@ def animate(i):
     ax.text(0.02,0.9,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
 
 
-# anim = FuncAnimation(
-#     fig, animate, interval=100, frames=frames)
-# anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
-#           "1s_Wigner_animation_H.gif")
+anim = FuncAnimation(
+    fig, animate, interval=100, frames=frames)
+anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
+          "Wigner_middle_animation_sqrtH.gif")
 
 
 # average of displacements for sqrtH
