@@ -29,15 +29,15 @@ osc = (GKP(d,0,delta,dim).state+np.exp(1j*1*pi/4)*GKP(d,1,delta,dim).state-GKP(d
 orig_osc = GKP(2,0,delta,dim).state
 # **************** #
 # Special middle state at pi/16
-# exp = np.exp(1j*pi/4)
-# alpha_0 = sqrt(6)/2*(1 + exp)
-# beta_0 = -sqrt(2)/2*(1 + exp)
-# gamma_0 = (-1 + exp)*exp
-# c0 = 2*alpha_0/sqrt(6) + beta_0/sqrt(2) - gamma_0/2
-# c1 = alpha_0/sqrt(6) + gamma_0/2
-# c2 = beta_0/sqrt(2) + gamma_0/2
-# c3 = alpha_0/sqrt(6) + gamma_0/2
-# osc_cursed = 1/2*(c0*GKP(d,0,delta,dim).state+c1*GKP(d,1,delta,dim).state+c2*GKP(d,2,delta,dim).state+c3*GKP(d,3,delta,dim).state)
+exp = np.exp(1j*pi/4)
+alpha_0 = sqrt(6)/2*(1 + exp)
+beta_0 = -sqrt(2)/2*(1 + exp)
+gamma_0 = (-1 + exp)*exp
+c0 = 2*alpha_0/sqrt(6) + beta_0/sqrt(2) - gamma_0/2
+c1 = alpha_0/sqrt(6) + gamma_0/2
+c2 = beta_0/sqrt(2) + gamma_0/2
+c3 = alpha_0/sqrt(6) + gamma_0/2
+osc_cursed = 1/2*(c0*GKP(d,0,delta,dim).state+c1*GKP(d,1,delta,dim).state+c2*GKP(d,2,delta,dim).state+c3*GKP(d,3,delta,dim).state)
 # **************** #
 
 
@@ -58,6 +58,7 @@ rot = mesolve(n_op, osc, rotlist, [], Ds,options=options)
 outs = mesolve(H, osc, tlist, [], Ds,options=options)
 psi = rot.states[-1]  # rotated
 print(f"La fidélité est de {fidelity(orig_osc,psi)}")
+psi = osc_cursed
 if psi.type == 'ket' or psi.type == 'bra':
     rho = ket2dm(psi)
 else:
@@ -110,13 +111,13 @@ if wigner:
     ax1.text(-6,5.8,rf"$N = {dim}$")
     # ax1.text(-6,5.0,r"$U = e^{i\frac{\pi}{16}n^2}$")
     # ax1.text(-6,5,r"$|\psi\rangle = |\bar{0}\rangle_{(2)}$")
-    ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{2}(|\bar{0}\rangle_{(4)} + e^{i\pi/4}|\bar{1}\rangle_{(4)}"
-                                                r"-|\bar{2}\rangle_{(4)} + e^{i\pi/4}|\bar{3}\rangle_{(4)})$")
+    # ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{2}(|\bar{0}\rangle_{(4)} + e^{i\pi/4}|\bar{1}\rangle_{(4)}"
+    #                                             r"-|\bar{2}\rangle_{(4)} + e^{i\pi/4}|\bar{3}\rangle_{(4)})$")
     # mesuring dimension of grid
     ax1.plot([0,0],[0,sqrt(pi)],'-',lw=1.5,color="black")
     ax1.text(sqrt(pi/2)/4,sqrt(pi)/2,r"$\sqrt{\pi}$",color="black",rotation=0)
 
-    plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_4/figs/qubit_equiv,j={j},d={d}")
+    plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_4/figs/test")
 
 
 # average of displacements for H

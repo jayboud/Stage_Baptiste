@@ -94,17 +94,14 @@ H = a.dag()*a
 
 
 n = a.dag()*a
-H = n*n
+H = n
 
-tf = pi/8
-spec_tf = 0.01
-tlist = np.linspace(0,spec_tf,70)  # times for animation
-mid_tlist = np.linspace(0,pi/16-0.005,10)  # times for middle state
+tf = pi/2
+tlist = np.linspace(0,tf,70)  # times for animation
 # tlist = np.linspace(0,tf,1200)  # times for expectation values
 options = Options(store_states=True,nsteps=2500)  # get states even if e_ops are calculated
 osc = GKP(2,0,delta,dim).state
-mid_outs = [mesolve(-H, osc, mid_tlist, [], [],options=options) for D in Ds]
-outs = [mesolve(-H, mid_outs[0].states[-1], tlist, [], [D],options=options) for D in Ds]
+outs = [mesolve(-H, osc, tlist, [], [D],options=options) for D in Ds]
 
 
 # sqrtH Wigner function
@@ -142,7 +139,7 @@ def animate(i):
     W0 = wigner(outs[0].states[i], xvec, xvec)
     W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
     ax.contourf(xvec, yvec, W, 100, norm=mpl.colors.Normalize(-wlim, wlim), cmap=mpl.colormaps['RdBu'])
-    ax.text(0.02,0.75,rf"$t = {round(gif_tlist[i],4)}$",ha='left', va='top', transform=ax.transAxes)
+    ax.text(0.02,0.75,rf"$t = {round(gif_tlist[i]/(tf),4)}$"+r"$\frac{\pi}{2}$",ha='left', va='top', transform=ax.transAxes)
     ax.text(0.02,0.8,r"$H = n^2$",ha='left', va='top', transform=ax.transAxes)
     ax.text(0.02,0.85,rf"$\Delta = {delta}$",ha='left', va='top', transform=ax.transAxes)
     ax.text(0.02,0.9,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
@@ -151,7 +148,7 @@ def animate(i):
 anim = FuncAnimation(
     fig, animate, interval=100, frames=frames)
 anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
-          "Wigner_middle_animation_sqrtH.gif")
+          "Wigner_animation_H_test.gif")
 
 
 # average of displacements for sqrtH
