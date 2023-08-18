@@ -30,9 +30,12 @@ orig_osc = GKP(2,0,delta,dim).state
 # **************** #
 # Special middle state at pi/16
 exp = np.exp(1j*pi/4)
-alpha_0 = sqrt(6)/2*(1 + exp)
-beta_0 = -sqrt(2)/2*(1 + exp)
-gamma_0 = (-1 + exp)*exp
+# alpha_0 = sqrt(6)/2*(1 + exp)
+# beta_0 = -sqrt(2)/2*(1 + exp)
+# gamma_0 = (-1 + exp)*exp
+alpha_0 = sqrt(6)/4*(1 + exp)
+beta_0 = -sqrt(2)/4*(1 + exp)
+gamma_0 = (-1 + exp)*exp/2  # le *exp change tout!
 c0 = 2*alpha_0/sqrt(6) + beta_0/sqrt(2) - gamma_0/2
 c1 = alpha_0/sqrt(6) + gamma_0/2
 c2 = beta_0/sqrt(2) + gamma_0/2
@@ -87,17 +90,18 @@ if wigner:
     W, yvec = W0 if isinstance(W0, tuple) else (W0, xvec)
     wlim = abs(W).max()
     fig = plt.figure(figsize=(8,8))
-    # fig.suptitle(r"$(\pi/4$ rotated) Wigner Function and its marginals")
-    fig.suptitle(r"(not rotated)Wigner Function and its marginals")
+
     gs = GridSpec(2, 2, width_ratios=[4, 1], height_ratios=[4, 1])
     ax1 = fig.add_subplot(gs[0])
     ax1.set_box_aspect(1)
     ax1.set_xticks(ticks,ticks_name)
     ax1.set_yticks(ticks,ticks_name)
     if angle:
+        fig.suptitle(r"(rotated) Wigner Function and its marginals")
         ax1.set_xlabel(r"$\hat{x}_4$",fontsize='x-large')
         ax1.set_ylabel(r"$\hat{p}_4$",fontsize='x-large', rotation=0)
     if not angle:
+        fig.suptitle(r"(not rotated)Wigner Function and its marginals")
         ax1.set_xlabel(r"$\hat{x}$",fontsize='x-large')
         ax1.set_ylabel(r"$\hat{p}$",fontsize='x-large', rotation=0)
     ax1.contourf(xvec, yvec, rotW0, 100,norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])

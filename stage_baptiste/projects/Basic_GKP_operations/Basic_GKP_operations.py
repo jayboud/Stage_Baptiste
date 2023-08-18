@@ -94,9 +94,9 @@ H = a.dag()*a
 
 
 n = a.dag()*a
-H = n
+H = n*n
 
-tf = pi/2
+tf = pi/8
 tlist = np.linspace(0,tf,70)  # times for animation
 # tlist = np.linspace(0,tf,1200)  # times for expectation values
 options = Options(store_states=True,nsteps=2500)  # get states even if e_ops are calculated
@@ -105,12 +105,14 @@ outs = [mesolve(-H, osc, tlist, [], [D],options=options) for D in Ds]
 
 
 # sqrtH Wigner function
-#
-#
-# fig, ax = plot_wigner(outs[0].states[-1])
-# ax.text(-6,6,rf"$\Delta = {delta}$")
-# ax.text(-6,5,rf"$N = {dim}$")
-# plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/sqrtHadamar_{dim}")
+
+
+fig, ax = plot_wigner(outs[0].states[-1])
+ax.text(-6,6,rf"$\Delta = {delta}$")
+ax.text(-6,5,rf"$N = {dim}$")
+ax.plot([0,0],[0,np.sqrt(pi)],'-',lw=1.5,color="black")
+ax.text(0.2,np.sqrt(pi)/2,r"$\sqrt{\pi}$",color="black",rotation=0)
+plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/sqrtHadamar_{dim}")
 
 
 # sqrtH Wigner function animation
@@ -145,10 +147,10 @@ def animate(i):
     ax.text(0.02,0.9,rf"$N = {dim}$",ha='left', va='top', transform=ax.transAxes)
 
 
-anim = FuncAnimation(
-    fig, animate, interval=100, frames=frames)
-anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
-          "Wigner_animation_H_test.gif")
+# anim = FuncAnimation(
+#     fig, animate, interval=100, frames=frames)
+# anim.save("/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Basic_GKP_operations/figs/"
+#           "Wigner_animation_H_test.gif")
 
 
 # average of displacements for sqrtH
