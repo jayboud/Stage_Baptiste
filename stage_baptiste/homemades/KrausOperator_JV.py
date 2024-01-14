@@ -49,6 +49,8 @@ def opListsBs2(GKP,pi_o_s=False):
             The object containing the finite GKP state and
             it's useful characteristics (d,j,delta,hilbert_dim)
             to apply errors on.
+        pi_o_s: bool
+            Enables adapted correction for the middle state.
 
     Returns:
         Klist: list
@@ -302,6 +304,9 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
             rho = rho_prime/prob_prime
             prob *= prob_prime
             if (n_round+1) % 2:
+                """
+                Modify for pi_o_s
+                """
                 rot_rho = Y*rho*Y.dag()
                 fidelities.append(get_fidelities(rot_rho,fid_rho,bqr)[qubit_mapping])
             else:

@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# MyFiles
+BOUDREAULTcontratPHQ662.docx
+
 # MacOS meta data
 .DS_Store
 
