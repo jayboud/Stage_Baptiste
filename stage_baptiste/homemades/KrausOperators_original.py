@@ -55,23 +55,23 @@ def opListsBs2(env,latticeGens):
     return Klist
 
 
-env = 0.15    # Sets the size of the GKP
-qubitSquareCodeLatGen = [2*np.sqrt(pi),2j*np.sqrt(pi)]
-Klist = opListsBs2(env,qubitSquareCodeLatGen)
-
-
-# define big spin
-Kgg = Klist[0][0]*Klist[1][0]
-
-xvec = np.linspace(-5,5,200)
-
-
-psi = basis(Ncav)  # Test by starting from vacuum, always measuring g
-fig, axes = plt.subplots(3, 3, figsize=(12,12))
-for i in range(9):
-    psi = (Kgg*psi).unit()  # Important to normalize the state as this is not a unitary evolution
-    print(f"fidelity {fidelity(psi,basis(Ncav))}")
-    Wpsi = wigner(psi, xvec, xvec)
-    wlim = abs(Wpsi).max()
-    axes[i%3,i//3].contourf(xvec, xvec, Wpsi, 100, norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
-plt.savefig("kraus")
+# env = 0.15    # Sets the size of the GKP
+# qubitSquareCodeLatGen = [2*np.sqrt(pi),2j*np.sqrt(pi)]
+# Klist = opListsBs2(env,qubitSquareCodeLatGen)
+#
+#
+# # define big spin
+# Kgg = Klist[0][0]*Klist[1][0]
+#
+# xvec = np.linspace(-5,5,200)
+#
+#
+# psi = basis(Ncav)  # Test by starting from vacuum, always measuring g
+# fig, axes = plt.subplots(3, 3, figsize=(12,12))
+# for i in range(9):
+#     psi = (Kgg*psi).unit()  # Important to normalize the state as this is not a unitary evolution
+#     print(f"fidelity {fidelity(psi,basis(Ncav))}")
+#     Wpsi = wigner(psi, xvec, xvec)
+#     wlim = abs(Wpsi).max()
+#     axes[i%3,i//3].contourf(xvec, xvec, Wpsi, 100, norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
+# plt.savefig("kraus")

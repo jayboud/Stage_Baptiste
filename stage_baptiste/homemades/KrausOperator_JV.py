@@ -30,8 +30,8 @@ def get_error_states(H,state,dim,t_list,kap_list):
     # evolving the state under photon loss error
     for count, kap in enumerate(kap_list):
         e_states.append(mesolve(-H, state, t_list, [np.sqrt(kap)*a], [], options=options).states[-1])
-        print(f"fidelity {fidelity(fid_rho, e_states[-1])}")
         print(f"e_states {count} done.")
+        print(f"fidelity {fidelity(fid_rho, e_states[-1])}")
     return fid_rho, e_states
 
 
@@ -195,7 +195,7 @@ def get_fidelities(A,B,basic_qubit_ref):
 
 
 def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,kap_num=10,N_rounds_steps=1,mode='random',
-               qubit_mapping=False,bqr=None,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,pi_o_s=False):
+               qubit_mapping=False,bqr=None,reference_state=None,superposition_state=None,ss_d=None,ss_delta=None,ss_hilbert_dim=None,pi_o_s=False):
     """
     Function that calculates fidelity colormap data (and probability if mode=gg) of sBs error correction
     protocol applied to a qubit state evolving under photon loss error sqrt(kappa)*a .
@@ -228,6 +228,8 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
             to calculate fidelity. (see mapping notes.pdf)
         bqr: Qobj (matrix)
             The basic qubit reference state for the fidelity of mapped qubits.
+        reference_state: Qobj (matrix)
+            Any qubit reference state for the fidelity of qubits.
         superposition_state: Qobj (ket)
             The initial state as a superposition of many GKP.states .
         ss_d: int (if superposition_state)
@@ -274,13 +276,15 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
         state = the_GKP.state
         dim = the_GKP.hilbert_dim
     # setting all good parameters
-    Y = displace(dim, np.sqrt(pi/2)*(1+1j))  # X gate for a qubit
+    Y = displace(dim, np.sqrt(pi / 2) * (1 + 1j))  # X gate for a qubit
     t_list = np.linspace(0, t_gate, t_num)
     kap_max = max_error_rate/t_gate
     kap_list = np.linspace(0,kap_max,kap_num)
     rate_list = np.linspace(0,max_error_rate,kap_num)
     N_rounds = np.arange(0,max_N_rounds,N_rounds_steps)
     fid_rho,e_states = get_error_states(H,state,dim,t_list,kap_list)
+    if reference_state:
+        fid_rho = reference_state
     opList = opListsBs2(the_GKP,pi_o_s=pi_o_s)
     corrections = [opList[0][0] * opList[1][0], opList[0][0] * opList[1][1],  # [Bgg, Bge
                    opList[0][1] * opList[1][0], opList[0][1] * opList[1][1]]  # Beg, Bee]
@@ -289,7 +293,7 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
     for e_state in e_states:
         rho = e_state/e_state.tr()  # uncorrected state
         prob = 1  # probability of getting that state (neglecting randomness in c_op evolution if there is any) ***
-        fidelities.append(get_fidelities(rho,fid_rho,bqr)[qubit_mapping])
+        fidelities.append(1-get_fidelities(rho,fid_rho,bqr)[qubit_mapping])
         probabilities.append(prob)
         for n_round in range(max_N_rounds):
             if mode == 'random':
@@ -303,21 +307,27 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
             prob_prime = rho_prime.tr()
             rho = rho_prime/prob_prime
             prob *= prob_prime
-            if (n_round+1) % 2:
-                """
-                Modify for pi_o_s
-                """
-                rot_rho = Y*rho*Y.dag()
-                fidelities.append(get_fidelities(rot_rho,fid_rho,bqr)[qubit_mapping])
+            if pi_o_s:
+                if (n_round+1) % 2:  # car round 0 déjà faite donc décalage de 1 pour tous
+                    """
+                    Modify for pi_o_s
+                    """
+                    Y = displace(dim, np.sqrt(pi / 2) * (1 + 1j))
+                    rot_rho = Y * rho * Y.dag()
+                    # fidelities.append(1 - get_fidelities(rot_rho, fid_rho, bqr)[qubit_mapping])
+                    # probabilities.append(prob)
+                else:  # bonnes rounds (paires)
+                    fidelities.append(1-get_fidelities(rho, fid_rho, bqr)[qubit_mapping])
+                    probabilities.append(prob)
             else:
-                fidelities.append(get_fidelities(rho,fid_rho,bqr)[qubit_mapping])
-            probabilities.append(prob)
+                fidelities.append(1 - get_fidelities(rho, fid_rho, bqr)[qubit_mapping])
+                probabilities.append(prob)
     fid_arr,prob_arr = np.real(np.array(fidelities)),np.real(np.array(probabilities))
     params = [rate_list,N_rounds,max_N_rounds]
     return fid_arr,prob_arr,params
 
 
-def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',fig_path=None,fig_name=None,save=True,show=False):
+def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',pi_o_s=False,fig_path=None,fig_name=None,save=True,show=False):
     """
     Function that plots a fidelity colormap (and a probability colormap if mode=gg). The x and y axis
     of the colormap are respectively the dimensionless error rate kappa*tgate (kappa is in tgate units)
@@ -343,26 +353,33 @@ def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',fig_path=None,fig_name=None,sa
 
     """
     rate_list, N_rounds, max_N_rounds = params
-    xvec,yvec = rate_list,np.append(N_rounds,max_N_rounds)
+    if pi_o_s:
+        xvec, yvec = rate_list, N_rounds[:max_N_rounds//2+1]
+    else:
+        xvec,yvec = rate_list,np.append(N_rounds,max_N_rounds)
     fid = np.reshape(fid_arr, (len(xvec), len(yvec))).T
     pro = np.reshape(prob_arr, (len(xvec), len(yvec))).T
     if mode in ['random','avg']:
         fig, ax = plt.subplots(figsize=(10, 8))
-        cff = ax.pcolormesh(xvec, yvec, fid,norm=mpl.colors.Normalize(0,1),cmap="seismic")
+        cff = ax.pcolormesh(xvec, yvec, fid,norm=mpl.colors.Normalize(0,1),cmap="Reds")
         fig.colorbar(cff, ax=ax)
-        ax.set_title("Fidelity map")
+        ax.set_title("Infidelity map")
         ax.set_xlabel(r"$\kappa t_{gate}$")
         ax.set_ylabel("N_rounds")
+        if pi_o_s:
+            ax.set_ylabel("N_rounds/2")
     elif mode == 'gg':
         fig, axs = plt.subplots(1, 2, figsize=(10, 4))
         cff = axs[0].pcolormesh(xvec,yvec,fid,norm=mpl.colors.Normalize(0,1),cmap="seismic")
         cfp = axs[1].pcolormesh(xvec, yvec, pro,norm=mpl.colors.Normalize(0,1),cmap="seismic")
         fig.colorbar(cfp, ax=axs[1])
-        axs[0].set_title("Fidelity map")
+        axs[0].set_title("Infidelity map")
         axs[1].set_title("Probability map")
         axs[0].set_xlabel(r"$\kappa t_{gate}$")
         axs[1].set_xlabel(r"$\kappa t_{gate}$")
         axs[0].set_ylabel("N_rounds")
+        if pi_o_s:
+            axs[0].set_ylabel("N_rounds/2")
         axs[1].sharey=axs[0]
     if save:
         plt.savefig(fig_path+fig_name)
@@ -371,7 +388,7 @@ def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',fig_path=None,fig_name=None,sa
     return
 
 
-def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],fig_path=None,traces_fig_name=None,save=True,show=False):
+def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],pi_o_s=False,fig_path=None,traces_fig_name=None,save=True,show=False):
     """
     Function that plots fidelity traces for
     chosen error rate and/or number of error correcting rounds.
@@ -398,7 +415,10 @@ def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],fig_path=
 
     """
     rate_list, N_rounds, max_N_rounds = params
-    xvec, yvec = rate_list, np.append(N_rounds, max_N_rounds)
+    if pi_o_s:
+        xvec, yvec = rate_list, N_rounds[:max_N_rounds//2 + 1]
+    else:
+        xvec, yvec = rate_list, np.append(N_rounds, max_N_rounds)
     fid = np.reshape(fid_arr, (len(xvec), len(yvec))).T
     # horizontal and vertical traces
     if not isinstance(traces_ix[0],list):
@@ -425,14 +445,16 @@ def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],fig_path=
         x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
         y_fit = parabolic(x_fit,*popt)
         axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}, \gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
-    axs[0].text(0.05,min(y_fit),r"$F = \alpha x^2 + \beta x + \gamma$")
+    # axs[0].text(0.05,min(y_fit),r"$F = \alpha x^2 + \beta x + \gamma$")
     for v_trace,v_ix in zip(v_traces,traces_ix[1]):
         v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
     axs[0].set_title("Horizontal traces")
     axs[1].set_title("Vertical traces")
     axs[0].set_xlabel(r"$\kappa t_{gate}$")
     axs[1].set_xlabel("N_rounds")
-    axs[0].set_ylabel(r"$F$",rotation=0)
+    if pi_o_s:
+        axs[1].set_xlabel("N_rounds/2")
+    axs[0].set_ylabel(r"$1-F$",rotation=0)
     # axs[0].set_ylim(0,1)
     axs[1].sharey = axs[0]
     for ax in axs:

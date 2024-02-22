@@ -10,6 +10,7 @@ import qutip as qt
 import math
 from scipy.special import hermite
 from scipy.constants import pi
+from stage_baptiste.homemades.KrausOperators_original import opListsBs2
 
 
 def get_d_gkp(d, j, delta, hilbert_dim, peak_range=10):
@@ -86,3 +87,33 @@ class GKP:
         self.delta = delta
         self.hilbert_dim = hilbert_dim
         self.coeffs, self.eigen_states, self.state = get_d_gkp(self.d, self.j, self.delta, self.hilbert_dim)
+
+
+class KrausGKP:
+    """
+    A class for a GKP state.
+    """
+    def __init__(self, d, j, delta, hilbert_dim):
+        """
+
+        Args:
+            d: int
+                The dimension of the codespace
+            j: int (0 or 1)
+                The number of the logical state.
+            delta: float
+                The enveloppe of the finite state.
+            hilbert_dim: int
+                The number of dimensions of the Hilbert space (Fock space).
+        """
+        self.d = d
+        self.j = j
+        self.delta = delta
+        self.hilbert_dim = hilbert_dim
+        latticeGens = [np.sqrt(2 * pi * d), 1j * np.sqrt(2 * pi * d)]
+        Klist = opListsBs2(delta,latticeGens)
+        Kgg = Klist[0][0]*Klist[1][0]
+        herm_op = Kgg.dag()*Kgg
+        eig_vals = herm_op.eigenstates()[0][-2:]
+        eig_vects = herm_op.eigenstates()[1][-2:]
+        self.coeffs, self.eigen_states, self.state = "This is a Kraus state", "This is a Kraus state", eig_vects[j]
