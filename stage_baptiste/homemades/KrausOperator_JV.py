@@ -288,14 +288,14 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
     opList = opListsBs2(the_GKP,pi_o_s=pi_o_s)
     corrections = [opList[0][0] * opList[1][0], opList[0][0] * opList[1][1],  # [Bgg, Bge
                    opList[0][1] * opList[1][0], opList[0][1] * opList[1][1]]  # Beg, Bee]
-    fidelities,probabilities = [],[]  # initializing lists
+    fidelities,probabilities,final_states = [],[],[] # initializing lists
     # correcting errors under sBs protocol
     for e_state in e_states:
         rho = e_state/e_state.tr()  # uncorrected state
         prob = 1  # probability of getting that state (neglecting randomness in c_op evolution if there is any) ***
         fidelities.append(1-get_fidelities(rho,fid_rho,bqr)[qubit_mapping])
         probabilities.append(prob)
-        for n_round in range(max_N_rounds):
+        for i,n_round in enumerate(range(max_N_rounds)):
             if mode == 'random':
                 correction = get_correction(corrections,rho)  # get correction at random according to probabilities
                 rho_prime = correction*rho*correction.dag()
@@ -319,12 +319,17 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
                 else:  # bonnes rounds (paires)
                     fidelities.append(1-get_fidelities(rho, fid_rho, bqr)[qubit_mapping])
                     probabilities.append(prob)
+                    if i == len(range(max_N_rounds)) - 1:
+                        final_states.append(rho)
+
             else:
                 fidelities.append(1 - get_fidelities(rho, fid_rho, bqr)[qubit_mapping])
                 probabilities.append(prob)
+                if i == len(range(max_N_rounds)) - 1:
+                    final_states.append(rho)
     fid_arr,prob_arr = np.real(np.array(fidelities)),np.real(np.array(probabilities))
     params = [rate_list,N_rounds,max_N_rounds]
-    return fid_arr,prob_arr,params
+    return fid_arr,prob_arr,final_states,params
 
 
 def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',pi_o_s=False,fig_path=None,fig_name=None,save=True,show=False):
@@ -444,10 +449,16 @@ def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],pi_o_s=Fa
         popt,pcov = curve_fit(parabolic,x_data,y_data)
         x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
         y_fit = parabolic(x_fit,*popt)
-        axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)}, \gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
+        axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)},\gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
+        if pi_o_s:
+            axs[0].plot(x_fit, y_fit,
+                        label=rf"fit $N={2*h_ix},\alpha={round(popt[0], 3)},\beta = {round(popt[1], 3)},\gamma= {round(popt[2], 3)}$",
+                        ls="dotted", color=h_trace.get_color())
+
     # axs[0].text(0.05,min(y_fit),r"$F = \alpha x^2 + \beta x + \gamma$")
     for v_trace,v_ix in zip(v_traces,traces_ix[1]):
         v_trace.set(label=r"$\kappa t_{gate} = $"+f"{round(xvec[v_ix],3)}")
+
     axs[0].set_title("Horizontal traces")
     axs[1].set_title("Vertical traces")
     axs[0].set_xlabel(r"$\kappa t_{gate}$")
