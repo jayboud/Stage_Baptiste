@@ -319,20 +319,20 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
                 else:  # bonnes rounds (paires)
                     fidelities.append(1-get_fidelities(rho, fid_rho, bqr)[qubit_mapping])
                     probabilities.append(prob)
-                    if i == len(range(max_N_rounds)) - 1:
+                    if i == len(range(max_N_rounds)) - 1:  # car on a ajoute 0 manuellement
                         final_states.append(rho)
 
             else:
                 fidelities.append(1 - get_fidelities(rho, fid_rho, bqr)[qubit_mapping])
                 probabilities.append(prob)
-                if i == len(range(max_N_rounds)) - 1:
+                if i == len(range(max_N_rounds)) - 1:  # car on a ajoute 0 manuellement
                     final_states.append(rho)
     fid_arr,prob_arr = np.real(np.array(fidelities)),np.real(np.array(probabilities))
     params = [rate_list,N_rounds,max_N_rounds]
     return fid_arr,prob_arr,final_states,params
 
 
-def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',pi_o_s=False,fig_path=None,fig_name=None,save=True,show=False):
+def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',halfs_only=False,fig_path=None,fig_name=None,save=True,show=False):
     """
     Function that plots a fidelity colormap (and a probability colormap if mode=gg). The x and y axis
     of the colormap are respectively the dimensionless error rate kappa*tgate (kappa is in tgate units)
@@ -358,7 +358,7 @@ def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',pi_o_s=False,fig_path=None,fig
 
     """
     rate_list, N_rounds, max_N_rounds = params
-    if pi_o_s:
+    if halfs_only:
         xvec, yvec = rate_list, N_rounds[:max_N_rounds//2+1]
     else:
         xvec,yvec = rate_list,np.append(N_rounds,max_N_rounds)
@@ -371,7 +371,7 @@ def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',pi_o_s=False,fig_path=None,fig
         ax.set_title("Infidelity map")
         ax.set_xlabel(r"$\kappa t_{gate}$")
         ax.set_ylabel("N_rounds")
-        if pi_o_s:
+        if halfs_only:
             ax.set_ylabel("N_rounds/2")
     elif mode == 'gg':
         fig, axs = plt.subplots(1, 2, figsize=(10, 4))
@@ -383,7 +383,7 @@ def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',pi_o_s=False,fig_path=None,fig
         axs[0].set_xlabel(r"$\kappa t_{gate}$")
         axs[1].set_xlabel(r"$\kappa t_{gate}$")
         axs[0].set_ylabel("N_rounds")
-        if pi_o_s:
+        if halfs_only:
             axs[0].set_ylabel("N_rounds/2")
         axs[1].sharey=axs[0]
     if save:
@@ -393,7 +393,7 @@ def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',pi_o_s=False,fig_path=None,fig
     return
 
 
-def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],pi_o_s=False,fig_path=None,traces_fig_name=None,save=True,show=False):
+def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],halfs_only=False,fig_path=None,traces_fig_name=None,save=True,show=False):
     """
     Function that plots fidelity traces for
     chosen error rate and/or number of error correcting rounds.
@@ -420,7 +420,7 @@ def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],pi_o_s=Fa
 
     """
     rate_list, N_rounds, max_N_rounds = params
-    if pi_o_s:
+    if halfs_only:
         xvec, yvec = rate_list, N_rounds[:max_N_rounds//2 + 1]
     else:
         xvec, yvec = rate_list, np.append(N_rounds, max_N_rounds)
@@ -450,7 +450,7 @@ def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],pi_o_s=Fa
         x_fit = np.linspace(x_data[1],max(h_trace.get_data()[0]),200)
         y_fit = parabolic(x_fit,*popt)
         axs[0].plot(x_fit,y_fit,label=rf"fit $N={h_ix},\alpha={round(popt[0],3)},\beta = {round(popt[1],3)},\gamma= {round(popt[2],3)}$",ls="dotted",color=h_trace.get_color())
-        if pi_o_s:
+        if halfs_only:
             axs[0].plot(x_fit, y_fit,
                         label=rf"fit $N={2*h_ix},\alpha={round(popt[0], 3)},\beta = {round(popt[1], 3)},\gamma= {round(popt[2], 3)}$",
                         ls="dotted", color=h_trace.get_color())
@@ -463,7 +463,7 @@ def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],pi_o_s=Fa
     axs[1].set_title("Vertical traces")
     axs[0].set_xlabel(r"$\kappa t_{gate}$")
     axs[1].set_xlabel("N_rounds")
-    if pi_o_s:
+    if halfs_only:
         axs[1].set_xlabel("N_rounds/2")
     axs[0].set_ylabel(r"$1-F$",rotation=0)
     # axs[0].set_ylim(0,1)
