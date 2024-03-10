@@ -136,19 +136,19 @@ for i,(final_state,kappa) in enumerate(zip(final_states,kap_list)):
         prob_prime = rho_prime.tr()
         rho = rho_prime / prob_prime
         prob *= prob_prime
-        # if n_round % 2:  # car round 0 déjà faite donc décalage de 1 pour tous
-        #     pass
-        # else:  # bonnes rounds (paires)
-        fidelities.append(1 - get_fidelities(rho, rho_ref, bqr)[qubit_mapping])
-        probabilities.append(prob)
+        if (n_round+1) % 2:  # car round 0 déjà faite donc décalage de 1 pour tous
+            pass
+        else:  # bonnes rounds (paires)
+            fidelities.append(1 - get_fidelities(rho, rho_ref, bqr)[qubit_mapping])
+            probabilities.append(prob)
 fid_arr2, prob_arr2 = np.real(np.array(fidelities)), np.real(np.array(probabilities))
 params2 = [rate_list, N_rounds, max_N_rounds]
 
 
 plot_cmaps(fid_arr2,prob_arr2,*params2,
-           mode='gg',fig_path=fig_path,halfs_only=False,
+           mode='gg',fig_path=fig_path,halfs_only=True,
            fig_name=fig_name,save=True,show=False)
 
-plot_fid_traces(fid_arr2,*params2,traces_ix=[[0,2,4,6,8],[2,4,6,8]],halfs_only=False,
+plot_fid_traces(fid_arr2,*params2,traces_ix=[[0,2,4,6,8],[2,4,6,8]],halfs_only=True,
                 fig_path=fig_path,traces_fig_name=tr_fig_name,save=True,show=False)
 
