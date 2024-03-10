@@ -99,7 +99,8 @@ exp = np.exp(1j*pi/4)
 options = Options(nsteps=2000)
 rho_ref = mesolve(-H, kGKP_obj.state, np.linspace(0, tgate, 10), [], [], options=options).states[-1]
 
-# bqr in not useful in the calculation
+# bqr and rho_ref
+# not useful in the calculation
 middle_rounds = 8
 fig_name = f"split_{middle_rounds}mr_ks_gg_cmap_mapped"
 tr_fig_name = f"split_{middle_rounds}mr_ks_gg_traces_mapped"
