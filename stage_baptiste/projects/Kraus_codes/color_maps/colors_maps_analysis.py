@@ -59,7 +59,7 @@ plot_fid_traces(fid_arr,*params,traces_ix=[[0,2,4,6,8],[2,4,6,8]],pi_o_s=True,
                 fig_path=fig_path,traces_fig_name=tr_fig_name,save=True,show=False)
 """
 
-# error correcting procdure in two steps
+# error correcting procedure in two steps
 d = 2
 j = 0
 delta = 0.15
@@ -78,8 +78,8 @@ kap_list = np.linspace(0,kap_max,kap_num)
 rate_list = np.linspace(0,max_error_rate,kap_num)
 N_rounds = np.arange(0,max_N_rounds,1)
 
-fig_name = "ks_pios_gg_cmap_perfect_ref_notmapped"
-tr_fig_name = "ks_pios_gg_traces_perfect_ref_notmapped"
+fig_name = "split_ks_pios_gg_cmap_perfect_ref_notmapped"
+tr_fig_name = "split_ks_pios_gg_traces_perfect_ref_notmapped"
 fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/two_half_gate"
 ground = basis(2,0)
 sqrtH = np.cos(np.pi/4)*qeye(2) - 1j*np.sin(np.pi/4)*(sigmax()+sigmaz())/np.sqrt(2)
@@ -103,14 +103,45 @@ rho_ref = ket2dm(perf_pi_o_s)
 middle_rounds = 5
 fid_arr,prob_arr,final_states,params = get_fid_n_prob_data(kGKP_obj, H, tgate, max_error_rate, middle_rounds,
                                               kap_num=10, mode='gg',reference_state=rho_ref,qubit_mapping=False,bqr=bqr,pi_o_s=True)
+# -------- second half --------- #
+opList = opListsBs2(kGKP_obj,pi_o_s=False)
+corrections = [opList[0][0] * opList[1][0], opList[0][0] * opList[1][1],  # [Bgg, Bge
+                   opList[0][1] * opList[1][0], opList[0][1] * opList[1][1]]  # Beg, Bee]
+fidelities,probabilities = [],[]  # initializing lists
+mode = 'gg'
+for i,final_state,kappa in enumerate(zip(final_states,kap_list)):
+    qubit_mapping = True
+    prob = fid_arr[i][-1]  # probability for final state
+    rho = final_state/final_state.tr()
+    fidelities.append(1 - get_fidelities(rho, rho_ref, bqr)[qubit_mapping])
+    probabilities.append(prob)
+    t_num = 10
+    t_list = np.linspace(0, tgate, t_num)
+    options = Options(nsteps=2000)
+    final_ev = mesolve(-H, rho, t_list, [np.sqrt(kappa)*a], [], options=options).states[-1]
+    # apply corrections
+    for i, n_round in enumerate(range(max_N_rounds)):
+        if mode == 'random':
+            correction = get_correction(corrections, rho)  # get correction at random according to probabilities
+            rho_prime = correction * rho * correction.dag()
+        elif mode == 'gg':
+            correction = opList[0][0] * opList[1][0]  # get Bgg correction each time
+            rho_prime = correction * rho * correction.dag()
+        elif mode == 'avg':
+            rho_prime = sum([correction * rho * correction.dag() for correction in corrections])
+        prob_prime = rho_prime.tr()
+        rho = rho_prime / prob_prime
+        prob *= prob_prime
+        fidelities.append(1 - get_fidelities(rho, rho_ref, bqr)[qubit_mapping])
+        probabilities.append(prob)
+    fid_arr2, prob_arr2 = np.real(np.array(fidelities)), np.real(np.array(probabilities))
+params2 = [rate_list, N_rounds, max_N_rounds]
 
-for final_state, kappa in zip(final_states,kap_list):
-    a = 1
 
-plot_cmaps(fid_arr,prob_arr,*params,
-           mode='gg',fig_path=fig_path,pi_o_s=True,
+plot_cmaps(fid_arr,prob_arr,*params2,
+           mode='gg',fig_path=fig_path,pi_o_s=False,
            fig_name=fig_name,save=True,show=False)
 
-plot_fid_traces(fid_arr,*params,traces_ix=[[0,2,4,6,8],[2,4,6,8]],pi_o_s=True,
+plot_fid_traces(fid_arr,*params,traces_ix=[[0,2,4,6,8],[2,4,6,8]],pi_o_s=False,
                 fig_path=fig_path,traces_fig_name=tr_fig_name,save=True,show=False)
 
