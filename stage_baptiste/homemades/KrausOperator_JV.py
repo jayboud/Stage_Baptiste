@@ -375,8 +375,8 @@ def plot_cmaps(fid_arr,prob_arr,*params,mode='gg',halfs_only=False,fig_path=None
             ax.set_ylabel("N_rounds/2")
     elif mode == 'gg':
         fig, axs = plt.subplots(1, 2, figsize=(10, 4))
-        cff = axs[0].pcolormesh(xvec,yvec,fid,norm=mpl.colors.Normalize(0,1),cmap="seismic")
-        cfp = axs[1].pcolormesh(xvec, yvec, pro,norm=mpl.colors.Normalize(0,1),cmap="seismic")
+        cff = axs[0].pcolormesh(xvec,yvec,fid,norm=mpl.colors.Normalize(0,1),cmap="Reds")
+        cfp = axs[1].pcolormesh(xvec, yvec, pro,norm=mpl.colors.Normalize(0,1),cmap="Reds")
         fig.colorbar(cfp, ax=axs[1])
         axs[0].set_title("Infidelity map")
         axs[1].set_title("Probability map")

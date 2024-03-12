@@ -12,8 +12,8 @@ from qutip import *
 from stage_baptiste.homemades.finite_GKP import GKP, KrausGKP
 from stage_baptiste.homemades.KrausOperator_JV import *
 
-# one error correcting procedure
-"""
+"""# one error correcting procedure
+
 d = 2
 j = 0
 delta = 0.15
@@ -27,9 +27,9 @@ tgate = pi/16
 max_error_rate = 0.01
 max_N_rounds = 30
 
-fig_name = "ks_pios_gg_cmap_perfect_ref_notmapped"
-tr_fig_name = "ks_pios_gg_traces_perfect_ref_notmapped"
-fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/direct_gate"
+fig_name = "ks_pios_gg_cmap_perfect_ref_mapped"
+tr_fig_name = "ks_pios_gg_traces_perfect_ref_mapped"
+fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/direct_gate/"
 ground = basis(2,0)
 sqrtH = np.cos(np.pi/4)*qeye(2) - 1j*np.sin(np.pi/4)*(sigmax()+sigmaz())/np.sqrt(2)
 bqr = sqrtH*ground*ground.dag()*sqrtH.dag()
@@ -49,14 +49,15 @@ perf_pi_o_s = 1/2*(c0*GKP(d,0,delta,hilbert_dim).state+c1*GKP(d,1,delta,hilbert_
 rho_ref = ket2dm(perf_pi_o_s)
 
 # bqr in not useful in the calculation
-fid_arr,prob_arr,params,last_state = get_fid_n_prob_data(kGKP_obj, H, tgate, max_error_rate, max_N_rounds,
-                                              kap_num=10, mode='gg',reference_state=rho_ref,qubit_mapping=False,bqr=bqr,pi_o_s=True)
+fid_arr,prob_arr,last_state,params = get_fid_n_prob_data(kGKP_obj, H, tgate, max_error_rate, max_N_rounds,
+                                              kap_num=10, mode='gg',reference_state=rho_ref,qubit_mapping=True,bqr=bqr,pi_o_s=True)
 plot_cmaps(fid_arr,prob_arr,*params,
-           mode='gg',fig_path=fig_path,pi_o_s=True,
+           mode='gg',fig_path=fig_path,halfs_only=True,
            fig_name=fig_name,save=True,show=False)
 
-plot_fid_traces(fid_arr,*params,traces_ix=[[0,2,4,6,8],[2,4,6,8]],pi_o_s=True,
+plot_fid_traces(fid_arr,*params,traces_ix=[[0,2,4,6,8],[2,4,6,8]],halfs_only=True,
                 fig_path=fig_path,traces_fig_name=tr_fig_name,save=True,show=False)
+
 """
 
 # error correcting procedure in two steps
@@ -97,7 +98,7 @@ exp = np.exp(1j*pi/4)
 # perf_pi_o_s = 1/2*(c0*GKP(d,0,delta,hilbert_dim).state+c1*GKP(d,1,delta,hilbert_dim).state+c2*GKP(d,2,delta,hilbert_dim).state+c3*GKP(d,3,delta,hilbert_dim).state)
 # rho_ref = ket2dm(perf_pi_o_s)
 options = Options(nsteps=2000)
-rho_ref = mesolve(-H, kGKP_obj.state, np.linspace(0, tgate, 10), [], [], options=options).states[-1]
+rho_ref = mesolve(-H, kGKP_obj.state, np.linspace(0, pi/8, 10), [], [], options=options).states[-1]
 
 # bqr and rho_ref
 # not useful in the calculation
@@ -152,4 +153,3 @@ plot_cmaps(fid_arr2,prob_arr2,*params2,
 
 plot_fid_traces(fid_arr2,*params2,traces_ix=[[0,2,4,6,8],[2,4,6,8]],halfs_only=True,
                 fig_path=fig_path,traces_fig_name=tr_fig_name,save=True,show=False)
-
