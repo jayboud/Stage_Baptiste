@@ -12,7 +12,7 @@ from qutip import *
 from stage_baptiste.homemades.finite_GKP import GKP, KrausGKP
 from stage_baptiste.homemades.KrausOperator_JV import *
 
-"""# one error correcting procedure
+# one error correcting procedure
 
 d = 2
 j = 0
@@ -23,12 +23,12 @@ N_op = a.dag()*a
 
 kGKP_obj = KrausGKP(d,j,delta,hilbert_dim)
 H = N_op**2
-tgate = pi/16
+tgate = pi/8
 max_error_rate = 0.01
 max_N_rounds = 30
 
-fig_name = "ks_pios_gg_cmap_perfect_ref_mapped"
-tr_fig_name = "ks_pios_gg_traces_perfect_ref_mapped"
+fig_name = "ks_sqrtH_avg_cmap_mapped"  # actuellement tests de gg
+tr_fig_name = "ks_sqrtH_avg_traces_mapped"
 fig_path = f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Kraus_codes/color_maps/figs/direct_gate/"
 ground = basis(2,0)
 sqrtH = np.cos(np.pi/4)*qeye(2) - 1j*np.sin(np.pi/4)*(sigmax()+sigmaz())/np.sqrt(2)
@@ -46,21 +46,21 @@ c1 = alpha_0/sqrt(6) + gamma_0/2
 c2 = beta_0/sqrt(2) + gamma_0/2
 c3 = alpha_0/sqrt(6) + gamma_0/2
 perf_pi_o_s = 1/2*(c0*GKP(d,0,delta,hilbert_dim).state+c1*GKP(d,1,delta,hilbert_dim).state+c2*GKP(d,2,delta,hilbert_dim).state+c3*GKP(d,3,delta,hilbert_dim).state)
-rho_ref = ket2dm(perf_pi_o_s)
-
+# rho_ref = ket2dm(perf_pi_o_s)
+options = Options(nsteps=2000)
+rho_ref = mesolve(-H, kGKP_obj.state, np.linspace(0, pi/8, 10), [], [], options=options).states[-1]
 # bqr in not useful in the calculation
 fid_arr,prob_arr,last_state,params = get_fid_n_prob_data(kGKP_obj, H, tgate, max_error_rate, max_N_rounds,
-                                              kap_num=10, mode='gg',reference_state=rho_ref,qubit_mapping=True,bqr=bqr,pi_o_s=True)
+                                              kap_num=10, mode='gg',reference_state=rho_ref,qubit_mapping=True,bqr=bqr,pi_o_s=False)
 plot_cmaps(fid_arr,prob_arr,*params,
-           mode='gg',fig_path=fig_path,halfs_only=True,
+           mode='gg',fig_path=fig_path,halfs_only=False,
            fig_name=fig_name,save=True,show=False)
 
-plot_fid_traces(fid_arr,*params,traces_ix=[[0,2,4,6,8],[2,4,6,8]],halfs_only=True,
+plot_fid_traces(fid_arr,*params,traces_ix=[[0,2,4,6,8],[2,4,6,8]],halfs_only=False,
                 fig_path=fig_path,traces_fig_name=tr_fig_name,save=True,show=False)
 
-"""
 
-# error correcting procedure in two steps
+"""# error correcting procedure in two steps
 d = 2
 j = 0
 delta = 0.15
@@ -103,8 +103,8 @@ rho_ref = mesolve(-H, kGKP_obj.state, np.linspace(0, pi/8, 10), [], [], options=
 # bqr and rho_ref
 # not useful in the calculation
 middle_rounds = 8
-fig_name = f"split_{middle_rounds}mr_ks_gg_cmap_mapped"
-tr_fig_name = f"split_{middle_rounds}mr_ks_gg_traces_mapped"
+fig_name = f"split_{middle_rounds}mr_ks_avg_cmap_mapped"
+tr_fig_name = f"split_{middle_rounds}mr_ks_avg_traces_mapped"
 fid_arr,prob_arr,final_states,params = get_fid_n_prob_data(kGKP_obj, H, tgate, max_error_rate, middle_rounds,
                                               kap_num=10, mode='gg',reference_state=rho_ref,qubit_mapping=False,bqr=bqr,pi_o_s=True)
 N_middle_rounds = np.arange(0,middle_rounds,1)
@@ -115,7 +115,7 @@ opList = opListsBs2(kGKP_obj,pi_o_s=False)
 corrections = [opList[0][0] * opList[1][0], opList[0][0] * opList[1][1],  # [Bgg, Bge
                    opList[0][1] * opList[1][0], opList[0][1] * opList[1][1]]  # Beg, Bee]
 fidelities,probabilities = [],[]  # initializing lists
-mode = 'gg'
+mode = 'avg'
 for i,(final_state,kappa) in enumerate(zip(final_states,kap_list)):
     qubit_mapping = False
     prob = fid_arr[:,i][-1]  # probability for final state
@@ -148,8 +148,9 @@ params2 = [rate_list, N_rounds, max_N_rounds]
 
 
 plot_cmaps(fid_arr2,prob_arr2,*params2,
-           mode='gg',fig_path=fig_path,halfs_only=True,
+           mode=mode,fig_path=fig_path,halfs_only=True,
            fig_name=fig_name,save=True,show=False)
 
 plot_fid_traces(fid_arr2,*params2,traces_ix=[[0,2,4,6,8],[2,4,6,8]],halfs_only=True,
                 fig_path=fig_path,traces_fig_name=tr_fig_name,save=True,show=False)
+"""
