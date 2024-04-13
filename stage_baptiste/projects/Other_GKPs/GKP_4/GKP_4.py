@@ -102,8 +102,8 @@ if wigner:
         ax1.set_ylabel(r"$\hat{p}_4$",fontsize='x-large', rotation=0)
     if not angle:
         fig.suptitle(r"(not rotated)Wigner Function and its marginals")
-        ax1.set_xlabel(r"$\hat{x}$",fontsize='x-large')
-        ax1.set_ylabel(r"$\hat{p}$",fontsize='x-large', rotation=0)
+        ax1.set_xlabel(r"$x$",fontsize='x-large')
+        ax1.set_ylabel(r"$p$",fontsize='x-large', rotation=0)
     ax1.contourf(xvec, yvec, rotW0, 100,norm=mpl.colors.Normalize(-wlim, wlim),cmap=mpl.colormaps['RdBu'])
     ax2 = fig.add_subplot(gs[1],sharey=ax1)
     # ax2.plot(Wy.data,np.linspace(-7.5,7.5,250))
@@ -111,17 +111,17 @@ if wigner:
     ax3 = fig.add_subplot(gs[2],sharex=ax1)
     # ax3.plot(np.linspace(-7.5,7.5,250),Wx.data)
     ax3.plot(np.linspace(-7.5,7.5,200)[:,None],rotWx)
-    ax1.text(-6,6.5,rf"$\Delta = {delta}$")
-    ax1.text(-6,5.8,rf"$N = {dim}$")
+    ax1.text(-6,6.5,rf"$\Delta = {delta}$",fontsize='xx-large')
+    ax1.text(-6,5.7,rf"$N = {dim}$",fontsize='xx-large')
     # ax1.text(-6,5.0,r"$U = e^{i\frac{\pi}{16}n^2}$")
     # ax1.text(-6,5,r"$|\psi\rangle = |\bar{0}\rangle_{(2)}$")
-    # ax1.text(-6,5,r"$|\psi\rangle = \frac{1}{2}(|\bar{0}\rangle_{(4)} + e^{i\pi/4}|\bar{1}\rangle_{(4)}"
-    #                                             r"-|\bar{2}\rangle_{(4)} + e^{i\pi/4}|\bar{3}\rangle_{(4)})$")
+    ax1.text(-6,4.8,r"$|\psi\rangle = \frac{1}{2}(|\bar{0}\rangle_{(4)} + e^{i\pi/4}|\bar{1}\rangle_{(4)}"
+                                                r"-|\bar{2}\rangle_{(4)} + e^{i\pi/4}|\bar{3}\rangle_{(4)})$",fontsize='x-large')
     # mesuring dimension of grid
-    ax1.plot([0,0],[0,sqrt(pi)],'-',lw=1.5,color="black")
-    ax1.text(sqrt(pi/2)/4,sqrt(pi)/2,r"$\sqrt{\pi}$",color="black",rotation=0)
+    ax1.plot([0,sqrt(pi/2)],[0,sqrt(pi/2)],'-',lw=1.2,color="black")
+    ax1.text(sqrt(pi/2)/4-0.5,sqrt(pi)/2+0.2,r"$\sqrt{\pi}$",color="black",rotation=0,fontsize='x-large')
 
-    plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_4/figs/test")
+    plt.savefig(f"/Users/jeremie/Desktop/Stage_Baptiste/stage_baptiste/projects/Other_GKPs/GKP_4/figs/perfect_middle_state")
 
 
 # average of displacements for H
