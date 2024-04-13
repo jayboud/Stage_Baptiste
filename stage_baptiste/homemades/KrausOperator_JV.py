@@ -294,6 +294,7 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
         rho = e_state/e_state.tr()  # uncorrected state
         prob = 1  # probability of getting that state (neglecting randomness in c_op evolution if there is any) ***
         fidelities.append(1-get_fidelities(rho,fid_rho,bqr)[qubit_mapping])
+        print(fidelities)
         probabilities.append(prob)
         for i,n_round in enumerate(range(max_N_rounds)):
             if mode == 'random':
