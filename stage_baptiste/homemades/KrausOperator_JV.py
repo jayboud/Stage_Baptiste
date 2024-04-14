@@ -288,13 +288,12 @@ def get_fid_n_prob_data(GKP_obj,H,t_gate,max_error_rate,max_N_rounds,t_num=10,ka
     opList = opListsBs2(the_GKP,pi_o_s=pi_o_s)
     corrections = [opList[0][0] * opList[1][0], opList[0][0] * opList[1][1],  # [Bgg, Bge
                    opList[0][1] * opList[1][0], opList[0][1] * opList[1][1]]  # Beg, Bee]
-    fidelities,probabilities,final_states = [],[],[] # initializing lists
+    fidelities,probabilities,final_states = [],[],[]  # initializing lists
     # correcting errors under sBs protocol
     for e_state in e_states:
         rho = e_state/e_state.tr()  # uncorrected state
         prob = 1  # probability of getting that state (neglecting randomness in c_op evolution if there is any) ***
         fidelities.append(1-get_fidelities(rho,fid_rho,bqr)[qubit_mapping])
-        print(fidelities)
         probabilities.append(prob)
         for i,n_round in enumerate(range(max_N_rounds)):
             if mode == 'random':
@@ -464,6 +463,8 @@ def plot_fid_traces(fid_arr,*params,traces_ix=[[8,10,12,14],[2,4,6,8]],halfs_onl
     axs[1].set_title("Vertical traces")
     axs[0].set_xlabel(r"$\kappa t_{gate}$")
     axs[1].set_xlabel("N_rounds")
+    axs[0].set_yscale("log")
+    axs[1].set_yscale("log")
     if halfs_only:
         axs[1].set_xlabel("N_rounds/2")
     axs[0].set_ylabel(r"$1-F$",rotation=0)
